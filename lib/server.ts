@@ -1,4 +1,7 @@
-import {env} from 'cloudflare:workers';
+import {getDatabase} from '../db/client';
+import {getImageStorage} from './storage';
+import {MAX_IMAGE_BYTES,MAX_UPLOAD_BODY_BYTES} from './upload-limits';
+import {requestOrigin} from './request-origin';
 import {z} from 'zod';
 import {ensureSeed,DEMO_MODE,studentNames,providerNames} from './seed';
 import {matchHome,profileError,allowedTour,roommateFit,transitions,universities,districts,amenities,priorities,roomTypes,validDate,type Home,type User,type Profile,type Role} from './domain';
@@ -21,7 +24,8 @@ function safeUser(r:Row):User{return {id:r.id,name:r.name,role:r.role,email:r.em
 export async function handle(request:Request){
  const requestId=id();
  try{
- const db=env.DB;must(db,'Database is not configured.',503);await ensureSeed(db);
+ const db=getDatabase();must(db,'Database is not configured. Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.',503);await ensureSeed(db);
+ const bucket=getImageStorage();
  const url=new URL(request.url),path=url.pathname.replace(/^\/api\/?/,'').replace(/\/$/,''),method=request.method;
  const all=async(sql:string,...args:any[])=> (await db.prepare(sql).bind(...args).all<Row>()).results;
  const one=async(sql:string,...args:any[])=>db.prepare(sql).bind(...args).first<Row>();
@@ -37,24 +41,24 @@ export async function handle(request:Request){
  const notification=(uid:string,title:string,href:string)=>stmt('INSERT INTO notifications (id,userId,title,href,read,createdAt) VALUES (?,?,?,?,0,?)',id(),uid,title,href,now());
  const audit=(action:string,objectId:string,before:string|null,after:string|null,reason:string)=>stmt('INSERT INTO audit (id,actorId,action,objectId,before,after,reason,createdAt) VALUES (?,?,?,?,?,?,?,?)',id(),user?.id||'system',action,objectId,before,after,reason,now());
  if(method!=='GET'){
-  const length=Number(request.headers.get('content-length')||0);must(length<=(path==='media/upload'?7000000:30000),'Request is too large.',413);
-  if(request.headers.get('origin')!==url.origin){await request.arrayBuffer();throw new Failure(403,'Request origin could not be verified.');}
+  const length=Number(request.headers.get('content-length')||0);must(length<=(path==='media/upload'?MAX_UPLOAD_BODY_BYTES:30000),'Request is too large.',413);
+  if(request.headers.get('origin')!==requestOrigin(request)){await request.arrayBuffer();throw new Failure(403,'Request origin could not be verified.');}
   must((request.headers.get('content-type')||'').startsWith('application/json'),'Use JSON for this request.',415);
-  const ip=request.headers.get('cf-connecting-ip')||'local';const key=await digest((user?.id||ip)+':'+(path.startsWith('auth/')?'auth':'write')+':'+Math.floor(Date.now()/60000));
+  const ip=(process.env.VERCEL?request.headers.get('x-vercel-forwarded-for'):request.headers.get('cf-connecting-ip'))||'local';const key=await digest((user?.id||ip)+':'+(path.startsWith('auth/')?'auth':'write')+':'+Math.floor(Date.now()/60000));
   const limit=path.startsWith('auth/')?25:80;await run('INSERT INTO rates (id,count,expiresAt) VALUES (?,1,?) ON CONFLICT(id) DO UPDATE SET count=count+1',key,Date.now()+120000);const rate=await one('SELECT count FROM rates WHERE id=?',key);must(rate&&rate.count<=limit,'Too many attempts. Please wait a minute.',429);
  }
- let b:any={};if(method!=='GET'){const raw=await request.text();must(raw.length<=(path==='media/upload'?7000000:30000),'Request is too large.',413);try{b=JSON.parse(raw||'{}');}catch{throw new Failure(400,'Invalid JSON.');}}
- const newSession=async(uid:string)=>{const token=id()+id();await run('INSERT INTO sessions (id,userId,expiresAt) VALUES (?,?,?)',await digest(token),uid,new Date(Date.now()+7*86400000).toISOString());return {'Set-Cookie':`edustay_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${url.protocol==='https:'?'; Secure':''}`};};
+ let b:any={};if(method!=='GET'){const raw=await request.text();must(raw.length<=(path==='media/upload'?MAX_UPLOAD_BODY_BYTES:30000),'Request is too large.',413);try{b=JSON.parse(raw||'{}');}catch{throw new Failure(400,'Invalid JSON.');}}
+ const newSession=async(uid:string)=>{const token=id()+id();await run('INSERT INTO sessions (id,userId,expiresAt) VALUES (?,?,?)',await digest(token),uid,new Date(Date.now()+7*86400000).toISOString());return {'Set-Cookie':`edustay_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${(process.env.VERCEL||url.protocol==='https:')?'; Secure':''}`};};
  if(path==='health')return json({ok:true,demo:DEMO_MODE,requestId});
  if(path==='media/upload'&&method==='POST'){
-  const u=requireUser('AGENT');must((await provider(u.id))?.status==='APPROVED','Provider approval is required.',403);must(env.BUCKET,'Image storage is not configured.',503);
-  const v=z.object({mime:z.enum(['image/jpeg','image/png','image/webp']),data:z.string().max(7000000),rights:z.literal(true)}).strict().parse(b);let bytes:Uint8Array;try{bytes=Uint8Array.from(atob(v.data),c=>c.charCodeAt(0));}catch{throw new Failure(400,'Invalid image data.');}
-  must(bytes.length>12&&bytes.length<=5*1024*1024,'Images must be smaller than 5 MB.');const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255,png=bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71,webp=String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP';must(v.mime==='image/jpeg'&&jpeg||v.mime==='image/png'&&png||v.mime==='image/webp'&&webp,'File contents do not match the image type.');
+  const u=requireUser('AGENT');must((await provider(u.id))?.status==='APPROVED','Provider approval is required.',403);must(bucket,'Image storage is not configured.',503);
+  const v=z.object({mime:z.enum(['image/jpeg','image/png','image/webp']),data:z.string().max(MAX_UPLOAD_BODY_BYTES),rights:z.literal(true)}).strict().parse(b);let bytes:Uint8Array;try{bytes=Uint8Array.from(atob(v.data),c=>c.charCodeAt(0));}catch{throw new Failure(400,'Invalid image data.');}
+  must(bytes.length>12&&bytes.length<=MAX_IMAGE_BYTES,'Images must be 3 MB or smaller.');const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255,png=bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71,webp=String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP';must(v.mime==='image/jpeg'&&jpeg||v.mime==='image/png'&&png||v.mime==='image/webp'&&webp,'File contents do not match the image type.');
   const recent=await one('SELECT COUNT(*) as total FROM media WHERE ownerId=? AND createdAt>?',u.id,new Date(Date.now()-86400000).toISOString());must((recent?.total||0)<30,'Daily upload limit reached.',429);
-  const mid=id();await env.BUCKET.put(mid,bytes,{httpMetadata:{contentType:v.mime}});await run('INSERT INTO media (id,ownerId,mime,size,createdAt) VALUES (?,?,?,?,?)',mid,u.id,v.mime,bytes.length,now());return json({url:'/api/media/'+mid},201);
+  const mid=id();await bucket.put(mid,bytes,{httpMetadata:{contentType:v.mime}});await run('INSERT INTO media (id,ownerId,mime,size,createdAt) VALUES (?,?,?,?,?)',mid,u.id,v.mime,bytes.length,now());return json({url:'/api/media/'+mid},201);
  }
  if(path.startsWith('media/')&&method==='GET'){
-  const mid=path.split('/')[1],asset=await one('SELECT * FROM media WHERE id=?',mid);must(asset,'Image not found.',404);const referenced=await one("SELECT l.id FROM listings l JOIN providers p ON p.userId=l.providerId WHERE l.status='LIVE' AND p.status='APPROVED' AND l.data LIKE ?",'%/api/media/'+mid+'%');must(referenced||user?.id===asset.ownerId||user&&['ADMIN','REVIEWER','MODERATOR'].includes(user.role),'Image not found.',404);must(env.BUCKET,'Image storage unavailable.',503);const object=await env.BUCKET.get(mid);must(object,'Image not found.',404);return new Response(object.body,{headers:{'Content-Type':asset.mime,'X-Content-Type-Options':'nosniff','Cache-Control':'private, no-store'}});
+  const mid=path.split('/')[1],asset=await one('SELECT * FROM media WHERE id=?',mid);must(asset,'Image not found.',404);const referenced=await one("SELECT l.id FROM listings l JOIN providers p ON p.userId=l.providerId WHERE l.status='LIVE' AND p.status='APPROVED' AND l.data LIKE ?",'%/api/media/'+mid+'%');must(referenced||user?.id===asset.ownerId||user&&['ADMIN','REVIEWER','MODERATOR'].includes(user.role),'Image not found.',404);must(bucket,'Image storage unavailable.',503);const object=await bucket.get(mid);must(object,'Image not found.',404);return new Response(object.body,{headers:{'Content-Type':asset.mime,'X-Content-Type-Options':'nosniff','Cache-Control':'private, no-store'}});
  }
  if(path==='bootstrap'&&method==='GET')return json({user,profile:user?.role==='STUDENT'?await profile(user.id):{},provider:user?.role==='AGENT'?await provider(user.id):null,demo:DEMO_MODE,universities,districts,amenities,priorities,notifications:user?await all('SELECT * FROM notifications WHERE userId=? ORDER BY createdAt DESC LIMIT 30',user.id):[]});
  if(path==='auth/demo'&&method==='POST'){
