@@ -8,4 +8,4 @@
 6. As **Demo reviewer**, review provider and listing submissions, publish a sample listing, or resolve a report. Audit entries record status changes and reasons.
 7. As Alex, open **Roommates**, opt in and choose up to three priorities. Switch to **Jamie** to accept a connection; messaging appears after acceptance. Pausing or blocking revokes access.
 
-All data is fictional and shared within this private demo. Do not enter identity documents, real rental inquiries or sensitive information.
+All data is fictional. Changes are shared across tabs in the same browser profile and stay on that device. Do not enter identity documents, real rental inquiries or sensitive information.
