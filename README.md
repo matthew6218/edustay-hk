@@ -57,6 +57,7 @@ The old Cloudflare/Sites scaffolding is retained for reference and is no longer 
 - Public marketing, help, privacy, terms and safety pages; EN, Traditional Chinese and Simplified Chinese UI labels.
 - Password registration/login, salted PBKDF2 hashes, one-time demo verification and reset links, simulated seven-day sessions, and shared role/ownership validation. HTTP-only cookies apply only in optional server mode.
 - Housing-profile wizard, search and filters, bounded results, swipe/pass/undo, shortlist, comparison, explainable deterministic matching and sample property details.
+- Rotatable 3D-style room illustration on every sample home. The shared template is labelled as illustrative and does not represent a property's actual layout; provider-supplied tours remain separate.
 - Consent-gated introductions, provider lead inbox, status history, participant messaging after acceptance, notifications, data export and deletion request.
 - Provider application, private image uploads, listing drafts, editing, owner-only inventory and leads, reviews and availability refresh.
 - Scoped reviewer/moderator/support queues, publication and suspension, reports, account restriction and audit events.
