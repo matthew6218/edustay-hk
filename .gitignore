@@ -36,6 +36,7 @@ yarn-error.log*
 /.sites-runtime/
 /.data/
 /.vercel/
+/public/demo/
 
 # Workspace scaffolding and publication archives
 /.agents/

@@ -2,10 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { get, put } from '@vercel/blob';
 
-export interface ImageStorage {
-  put(key: string, bytes: Uint8Array, options: { httpMetadata: { contentType: string } }): Promise<void>;
-  get(key: string): Promise<{ body: BodyInit } | null>;
-}
+import type { ImageStorage } from '../db/contracts';
 
 function pathname(key: string) {
   if (!/^[a-zA-Z0-9-]+$/.test(key)) throw new Error('Invalid image key.');

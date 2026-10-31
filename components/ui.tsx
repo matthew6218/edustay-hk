@@ -3,7 +3,23 @@ import React,{createContext,useContext,useEffect,useRef,useState} from 'react';
 import {X,ArrowRight,LoaderCircle,House,CheckCircle2,Search} from 'lucide-react';
 import type {User,Profile,Home} from '@/lib/domain';
 import type {Locale} from '@/lib/i18n';
-export async function api(path:string,body?:unknown):Promise<any>{const response=await fetch('/api/'+path,body===undefined?{cache:'no-store'}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const result:any=await response.json();if(!response.ok)throw new Error(result.error||'Request failed.');return result;}
+import {api,apiResponse,browserDemo} from '@/lib/api';
+export {api};
+export function MediaImage({src,alt,...props}:React.ImgHTMLAttributes<HTMLImageElement>){
+ const local=browserDemo&&typeof src==='string'&&src.startsWith('/api/media/');
+ const [image,setImage]=useState<{source:string;url:string}|null>(null);
+ useEffect(()=>{
+  if(!local||typeof src!=='string')return;
+  let active=true,objectUrl='';
+  apiResponse(src.slice('/api/'.length)).then(async response=>{
+   if(!response.ok)return;
+   objectUrl=URL.createObjectURL(await response.blob());
+   if(active)setImage({source:src,url:objectUrl});else URL.revokeObjectURL(objectUrl);
+  }).catch(()=>{});
+  return()=>{active=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};
+ },[src,local]);
+ return <img {...props} alt={alt} src={local?(image?.source===src?image.url:undefined):src}/>;
+}
 export type Boot={user:User|null;profile:Profile;provider:any;notifications:any[];universities:string[];districts:string[];amenities:string[];priorities:string[];demo:boolean};
 export const UI=createContext<{boot:Boot|null;refresh:()=>Promise<void>;locale:Locale;t:(s:string)=>string;notify:(s:string)=>void;demo:()=>void}>({boot:null,refresh:async()=>{},locale:'en',t:s=>s,notify:()=>{},demo:()=>{}});
 export const useUI=()=>useContext(UI);
@@ -11,7 +27,7 @@ export const money=(n:number)=>'HK$'+Number(n).toLocaleString('en-HK');
 export const label=(s:string)=>s.toLowerCase().replaceAll('_',' ').replace(/^./,x=>x.toUpperCase());
 export function useResource<T=any>(path:string){const [data,setData]=useState<T|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true);const refresh=async()=>{setError('');setLoading(true);try{setData(await api(path));}catch(e){setError((e as Error).message);}finally{setLoading(false);}};useEffect(()=>{let active=true;setLoading(true);setError('');api(path).then(v=>{if(active)setData(v);}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[path]);return {data,error,loading,refresh};}
 export function Button({children,variant='',className='',busy=false,...props}:React.ButtonHTMLAttributes<HTMLButtonElement>&{variant?:string;busy?:boolean}){return <button {...props} disabled={props.disabled||busy} className={`btn ${variant} ${className}`}>{busy&&<LoaderCircle size={16} className="spin"/>}{children}</button>;}
-export function Action({children,run,variant='',className=''}:{children:React.ReactNode;run:()=>Promise<unknown>;variant?:string;className?:string}){const [busy,setBusy]=useState(false),{notify}=useUI();return <Button className={className} variant={variant} busy={busy} onClick={async()=>{setBusy(true);try{await run();}catch(e){notify((e as Error).message);}finally{setBusy(false);}}}>{children}</Button>;}
+export function Action({children,run,variant='',className=''}:{children:React.ReactNode;run:()=>Promise<unknown>;variant?:string;className?:string}){const [busy,setBusy]=useState(false),[error,setError]=useState('');return <><Button className={className} variant={variant} busy={busy} onClick={async()=>{setBusy(true);setError('');try{await run();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}}>{children}</Button>{error&&<p className="error" role="alert">{error}</p>}</>;}
 export function LinkButton({href,children,variant='',className=''}:{href:string;children:React.ReactNode;variant?:string;className?:string}){return <a className={`btn ${variant} ${className}`} href={href}>{children}</a>;}
 export function Field({label:caption,children,hint,...props}:React.InputHTMLAttributes<HTMLInputElement>&{label:string;children?:React.ReactNode;hint?:string}){const {t}=useUI();return <label className="field"><span>{t(caption)}</span>{children||<input {...props}/>} {hint&&<small>{t(hint)}</small>}</label>;}
 export function Select({label:caption,options,value,onChange,blank}:{label:string;options:string[];value?:string;onChange:(s:string)=>void;blank?:string}){const {t}=useUI();return <Field label={caption}><select value={value||''} onChange={e=>onChange(e.target.value)}>{blank!==undefined&&<option value="">{t(blank)}</option>}{options.map(x=><option key={x} value={x}>{t(x)}</option>)}</select></Field>;}
