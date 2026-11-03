@@ -1,58 +1,1458 @@
-'use client';
-import {MediaImage} from './ui';
-import DemoRoom3D from './DemoRoom3D';
-import roomStyles from './DemoRoom3D.module.css';
-import {useEffect,useRef,useState} from 'react';
-import {Heart,MapPin,ArrowRight,ArrowLeft,Search,SlidersHorizontal,BedDouble,Maximize,CalendarDays,Check,ShieldCheck,RotateCcw,X,ArrowUpRight,GraduationCap,Sparkles,Building2,ExternalLink,Info} from 'lucide-react';
-import {type Home,districts,universities,roomTypes} from '@/lib/domain';
-import {housingDirectory} from '@/lib/housing-directory';
-import {api,useUI,useResource,Button,Action,LinkButton,Badge,PageTitle,Field,Select,Form,Modal,Empty,Loading,ResourceError,FitDetails,Notice,money} from './ui';
-export function HomeCard({home:h,onChange,compare,onCompare}:{home:Home;onChange?:()=>void;compare?:boolean;onCompare?:(id:string)=>void}){
- const {boot,t,notify}=useUI(),[saved,setSaved]=useState(!!h.saved);useEffect(()=>setSaved(!!h.saved),[h.saved]);
- return <article className="home-card"><div className="home-photo"><a href={'/listings/'+h.id}><MediaImage src={h.images[0]} alt={'Illustrative interior for '+h.title} loading="lazy"/></a><Badge kind="photo">{t('Sample listing')}</Badge><a className={roomStyles.cardLink} href={'/listings/'+h.id+'#room-preview'}>3D preview</a><button className={'save-button '+(saved?'saved':'')} aria-label={saved?'Remove saved home':t('Save home')} aria-pressed={saved} onClick={async()=>{if(!boot?.user){window.location.href='/login?next='+encodeURIComponent('/listings/'+h.id);return;}try{await api('interactions',{listingId:h.id,action:saved?'NONE':'SAVE'});setSaved(!saved);onChange?.();}catch(e){notify((e as Error).message);}}}><Heart size={19} fill={saved?'currentColor':'none'}/></button><span className="photo-caption">{t('Illustrative photo')}</span></div><div className="home-card-body"><div className="home-meta"><span><MapPin size={13}/>{h.district}</span>{h.match?.score!==null&&h.match?.score!==undefined&&<span className="fit-badge"><Sparkles size={12}/>{h.match.score}% fit</span>}</div><h3><a href={'/listings/'+h.id}>{h.title}</a></h3><div className="home-facts"><span><BedDouble size={14}/>{t(h.type)}</span><span><Maximize size={13}/>{h.area} sq ft</span></div>{h.sampleSourceName&&h.sampleSourceUrl&&<p className="sample-source">Sample reference: <a href={h.sampleSourceUrl} target="_blank" rel="noopener noreferrer">{h.sampleSourceName}<ExternalLink size={11}/></a></p>}<div className="home-card-bottom"><p><strong>{money(h.rent)}</strong><small> / month</small></p><a href={'/listings/'+h.id} aria-label={'View '+h.title}><ArrowUpRight size={21}/></a></div>{onCompare&&<label className="compare-check"><input type="checkbox" checked={compare} onChange={()=>onCompare(h.id)}/>{t('Compare')}</label>}</div></article>;
+"use client";
+import { MediaImage } from "./ui";
+import DemoRoom3D from "./DemoRoom3D";
+import roomStyles from "./DemoRoom3D.module.css";
+import { useEffect, useRef, useState } from "react";
+import {
+  Heart,
+  MapPin,
+  ArrowRight,
+  ArrowLeft,
+  Search,
+  SlidersHorizontal,
+  BedDouble,
+  Maximize,
+  CalendarDays,
+  Check,
+  ShieldCheck,
+  RotateCcw,
+  X,
+  ArrowUpRight,
+  GraduationCap,
+  Sparkles,
+  Building2,
+  ExternalLink,
+  Info,
+} from "lucide-react";
+import { type Home, districts, universities, roomTypes } from "@/lib/domain";
+import { housingDirectory } from "@/lib/housing-directory";
+import {
+  api,
+  useUI,
+  useResource,
+  Button,
+  Action,
+  LinkButton,
+  Badge,
+  PageTitle,
+  Field,
+  Select,
+  Form,
+  Modal,
+  Empty,
+  Loading,
+  ResourceError,
+  FitDetails,
+  Notice,
+  money,
+} from "./ui";
+export function HomeCard({
+  home: h,
+  onChange,
+  compare,
+  onCompare,
+}: {
+  home: Home;
+  onChange?: () => void;
+  compare?: boolean;
+  onCompare?: (id: string) => void;
+}) {
+  const { boot, t, notify } = useUI(),
+    [saved, setSaved] = useState(!!h.saved);
+  useEffect(() => setSaved(!!h.saved), [h.saved]);
+  return (
+    <article className="home-card">
+      <div className="home-photo">
+        <a href={"/listings/" + h.id}>
+          <MediaImage
+            src={h.images[0]}
+            alt={"Illustrative interior for " + h.title}
+            loading="lazy"
+          />
+        </a>
+        <Badge kind="photo">{t("Sample listing")}</Badge>
+        <a
+          className={roomStyles.cardLink}
+          href={"/listings/" + h.id + "#room-preview"}
+        >
+          3D preview
+        </a>
+        <button
+          className={"save-button " + (saved ? "saved" : "")}
+          aria-label={saved ? "Remove saved home" : t("Save home")}
+          aria-pressed={saved}
+          onClick={async () => {
+            if (!boot?.user) {
+              window.location.href =
+                "/login?next=" + encodeURIComponent("/listings/" + h.id);
+              return;
+            }
+            try {
+              await api("interactions", {
+                listingId: h.id,
+                action: saved ? "NONE" : "SAVE",
+              });
+              setSaved(!saved);
+              onChange?.();
+            } catch (e) {
+              notify((e as Error).message);
+            }
+          }}
+        >
+          <Heart size={19} fill={saved ? "currentColor" : "none"} />
+        </button>
+        <span className="photo-caption">{t("Illustrative photo")}</span>
+      </div>
+      <div className="home-card-body">
+        <div className="home-meta">
+          <span>
+            <MapPin size={13} />
+            {h.district}
+          </span>
+          {h.match?.score !== null && h.match?.score !== undefined && (
+            <span className="fit-badge">
+              <Sparkles size={12} />
+              {h.match.score}% fit
+            </span>
+          )}
+        </div>
+        <h3>
+          <a href={"/listings/" + h.id}>{h.title}</a>
+        </h3>
+        <div className="home-facts">
+          <span>
+            <BedDouble size={14} />
+            {t(h.type)}
+          </span>
+          <span>
+            <Maximize size={13} />
+            {h.area} sq ft
+          </span>
+        </div>
+        {h.sampleSourceName && h.sampleSourceUrl && (
+          <p className="sample-source">
+            Original listing:{" "}
+            <a
+              href={h.sampleSourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {h.sampleSourceName}
+              <ExternalLink size={11} />
+            </a>
+          </p>
+        )}
+        <div className="home-card-bottom">
+          <p>
+            <strong>{money(h.rent)}</strong>
+            <small> / month</small>
+          </p>
+          <a href={"/listings/" + h.id} aria-label={"View " + h.title}>
+            <ArrowUpRight size={21} />
+          </a>
+        </div>
+        {onCompare && (
+          <label className="compare-check">
+            <input
+              type="checkbox"
+              checked={compare}
+              onChange={() => onCompare(h.id)}
+            />
+            {t("Compare")}
+          </label>
+        )}
+      </div>
+    </article>
+  );
 }
-export function HeroSearch(){const {t}=useUI();return <form className="hero-search" action="/listings"><label><span><GraduationCap size={16}/>{t('University')}</span><select name="university" defaultValue="HKU"><option value="">{t('All universities')}</option>{universities.map(u=><option key={u}>{u}</option>)}</select></label><label><span><MapPin size={16}/>{t('Neighbourhood')}</span><select name="district"><option value="">{t('Any neighbourhood')}</option>{districts.map(d=><option key={d}>{d}</option>)}</select></label><label><span><span className="currency-symbol">$</span>{t('Monthly budget')}</span><select name="max" defaultValue="8000">{[6000,8000,10000,12000,15000,20000].map(n=><option key={n} value={n}>Up to {money(n)}</option>)}</select></label><Button type="submit"><Search size={18}/>{t('Find my home')}</Button></form>;}
-export function HomePage(){const {t,boot,demo}=useUI(),{data}=useResource('listings');return <>
- <section className="hero"><div className="hero-content"><div className="hero-kicker"><span/> HONG KONG LIVING, MADE PERSONAL</div><h1>{t('Your next chapter,')}<br/><em>{t('starts with a home.')}</em></h1><p>{t('Find your place in Hong Kong, before you arrive.')}<br/>Thoughtful matches. Clear details. A little less unknown.</p><div className="hero-buttons">{boot?.user?.role==='STUDENT'?<LinkButton href="/app/onboarding">{t('Find my match')}<ArrowRight size={18}/></LinkButton>:boot?.user?<LinkButton href={boot.user.role==='AGENT'?'/agent':'/admin'}>{t('Your dashboard')}<ArrowRight size={18}/></LinkButton>:<Button onClick={demo}>{t('Try the demo')}<ArrowRight size={18}/></Button>}<a className="text-link" href="/how-it-works">{t('How it works')}<ArrowUpRight size={17}/></a></div><div className="hero-notes"><span><Check size={15}/>Your preferences, your pace</span><span><Check size={15}/>No platform payments</span></div></div><div className="hero-visual"><MediaImage className="city-photo" src="/images/hong-kong.jpg" alt="Victoria Harbour, Hong Kong at dusk" fetchPriority="high"/><div className="city-overlay"/><div className="city-caption"><MapPin size={15}/>A new chapter in Hong Kong</div><div className="floating-home"><MediaImage src="/images/room-1.jpg" alt="Illustrative bright bedroom"/><div><Badge kind="green">A place to call your own</Badge><strong>Small space. Big possibilities.</strong><span>Discover your student home <ArrowUpRight size={15}/></span></div></div><div className="hero-stamp"><HouseGlyph/><span>MADE FOR<br/><strong>your next chapter</strong></span></div></div></section>
- <div className="search-wrap container"><HeroSearch/><p className="search-hint">Exploring for your next semester? All homes shown are fictional sample listings.</p></div>
- <section className="university-strip container"><p>Wherever you study,<br/><strong>feel a little more at home.</strong></p><div>{['HKU','CUHK','CityUHK','PolyU','HKUST'].map((u,i)=><span key={u}><GraduationCap size={i%2?24:28}/>{u}</span>)}</div><small>Independent platform.<br/>No university affiliation.</small></section>
- <section className="section container"><div className="section-heading"><div><span className="eyebrow">FIND YOUR CORNER OF THE CITY</span><h2>{t('A place for your everyday.')}</h2><p>Study sessions, slow mornings, and everything in between.</p></div><a href="/listings" className="text-link">{t('View all homes')}<ArrowRight size={18}/></a></div><div className="home-grid">{data?.homes.slice(0,3).map((h:Home)=><HomeCard key={h.id} home={h}/>)||[1,2,3].map(i=><div className="skeleton home-skeleton" key={i}/>)}</div></section>
- <section className="directory-callout container"><div><span className="eyebrow">REAL-WORLD HOUSING SOURCES</span><h2>Compare more places to look.</h2><p>Explore established Hong Kong property platforms and student residence operators in one independent directory.</p></div><LinkButton href="/housing-directory" variant="light">Browse the directory<ArrowRight size={18}/></LinkButton></section>
- <section className="process-section"><div className="container"><div className="section-heading"><div><span className="eyebrow">LESS GUESSWORK. MORE POSSIBILITIES.</span><h2>A new home, in a few thoughtful steps.</h2></div><p>From “where do I start?”<br/>to a conversation that moves you forward.</p></div><div className="steps-grid">{[[SlidersHorizontal,'01','Tell us what feels right','Your university, your budget, your plans. You set the preferences.'],[Heart,'02','Meet your possible homes','Browse or swipe. See why a place fits, and where you may compromise.'],[ShieldCheck,'03','Connect on your terms','Choose a provider to contact. Review what you share before sending.']].map(([Icon,num,title,desc]:any)=><div className="process-step" key={num}><div className="step-top"><span className="step-icon"><Icon size={23}/></span><span>{num}</span></div><h3>{title}</h3><p>{desc}</p></div>)}</div></div></section>
- <section className="roommate-section container"><div className="roommate-art"><span className="orbit one"/><span className="orbit two"/><span className="avatar-art a">J<span>Quiet study 📚</span></span><span className="avatar-art b">A<span>Cooking together 🍜</span></span><span className="avatar-art c">S<span>A tidy home 🌱</span></span><div className="center-heart"><Heart size={30}/></div><Badge kind="art">A good home starts with good company.</Badge></div><div><span className="eyebrow">YOUR SPACE. YOUR PEOPLE.</span><h2>{t('Find your kind of flatmate.')}</h2><p>Early bird or night owl? Shared dinners or quiet evenings? Choose up to three things that matter, and meet people with a similar idea of home.</p><div className="inline-points"><span><Check size={16}/>Always opt-in</span><span><Check size={16}/>Mutual consent to chat</span></div><LinkButton href={boot?.user?.role==='STUDENT'?'/app/roommates':'/roommates'}>{t('Discover roommates')}<ArrowRight size={18}/></LinkButton><small>Illustrative personas. Your contact details stay private.</small></div></section>
- <section className="provider-banner container"><div><span className="eyebrow">FOR HOUSING PROVIDERS</span><h2>You have the space.<br/>They have a new chapter ahead.</h2><p>Share your property with students whose plans fit yours.</p></div><LinkButton href="/for-agents" variant="light">{t('List a home')}<ArrowUpRight size={19}/></LinkButton></section>
- <section className="section container faq-section"><div><span className="eyebrow">A LITTLE MORE CLARITY</span><h2>Good questions.<br/>Straightforward answers.</h2><a href="/faq" className="text-link">{t('Help & FAQ')}<ArrowRight size={16}/></a></div><FAQ/></section>
- </>;}
-export function HousingDirectory(){
- const platforms=housingDirectory.filter(x=>x.category==='Property platform'),residences=housingDirectory.filter(x=>x.category==='Student residence');
- const group=(title:string,description:string,entries:typeof housingDirectory)=><section className="directory-group"><div className="directory-group-heading"><div><span className="eyebrow">{title}</span><h2>{title==='PROPERTY PLATFORMS'?'Search the wider rental market.':'Explore student-focused residences.'}</h2><p>{description}</p></div><span>{entries.length} sources</span></div><div className="directory-grid">{entries.map(entry=><article className="directory-card" key={entry.name}><div className="directory-card-top"><span className="directory-icon"><Building2 size={22}/></span><span className="directory-type">{entry.category}</span></div><h3>{entry.name}</h3><p>{entry.summary}</p>{entry.audience&&<div className="audience-note"><GraduationCap size={16}/><span><strong>Eligibility stated by provider</strong>{entry.audience}</span></div>}<ul>{entry.details.map(detail=><li key={detail}><Check size={14}/>{detail}</li>)}</ul><a className="directory-link" href={entry.url} target="_blank" rel="noopener noreferrer">Visit official website<ExternalLink size={15}/></a></article>)}</div></section>;
- return <div className="container page-space directory-page"><PageTitle eyebrow="HOUSING INFORMATION HUB" title="More ways to find a home in Hong Kong." description="A curated starting point for students comparing the general rental market and purpose-built residences."/><Notice><span className="directory-notice"><Info size={18}/><span><strong>Independent directory, not an endorsement.</strong> EduStay is not affiliated with these organisations and does not import or verify their live inventory. Prices, eligibility, deposits and availability can change—confirm everything on the provider’s official site before paying or signing.</span></span></Notice>{group('PROPERTY PLATFORMS','Broad rental portals may include agent and owner listings. Check the advertiser’s identity, licence where applicable, fees and lease terms independently.',platforms)}{group('STUDENT RESIDENCES','Operator-managed accommodation can offer furnished rooms and student-oriented services. Eligibility, lease length and payment schedules differ.',residences)}<p className="directory-updated">Information reviewed from official provider websites on 3 November 2026. External sites open in a new tab.</p></div>;
+export function HeroSearch() {
+  const { t } = useUI();
+  return (
+    <form className="hero-search" action="/listings">
+      <label>
+        <span>
+          <GraduationCap size={16} />
+          {t("University")}
+        </span>
+        <select name="university" defaultValue="HKU">
+          <option value="">{t("All universities")}</option>
+          {universities.map((u) => (
+            <option key={u}>{u}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        <span>
+          <MapPin size={16} />
+          {t("Neighbourhood")}
+        </span>
+        <select name="district">
+          <option value="">{t("Any neighbourhood")}</option>
+          {districts.map((d) => (
+            <option key={d}>{d}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        <span>
+          <span className="currency-symbol">$</span>
+          {t("Monthly budget")}
+        </span>
+        <select name="max" defaultValue="8000">
+          {[6000, 8000, 10000, 12000, 15000, 20000].map((n) => (
+            <option key={n} value={n}>
+              Up to {money(n)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Button type="submit">
+        <Search size={18} />
+        {t("Find my home")}
+      </Button>
+    </form>
+  );
 }
-function HouseGlyph(){return <svg width="34" height="34" viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="m5 17 13-11 13 11v14H22V20h-8v11H5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>;}
-export function FAQ(){return <div className="faq-list">{[['Does EduStay rent out these homes?','EduStay is a discovery and introduction platform. The provider manages viewings and any actual lease. This demo contains fictional homes, providers and availability.'],['What does a fit score mean?','A deterministic comparison of your budget, preferred area, dates, room type and amenities. Missing criteria are disclosed. It is not a safety rating or a reservation.'],['Are deposits or payments handled here?','No. EduStay does not collect rent, hold deposits, provide escrow or guarantee a lease. Independently check a provider and rental terms before making any real arrangement.'],['Who can see my information?','Your housing profile stays private. An introduction shares only the stated alias, university, budget, dates and message with that home’s provider after your consent. Roommate chats require mutual acceptance.']].map(([q,a])=><details key={q}><summary>{q}<span>+</span></summary><p>{a}</p></details>)}</div>;}
-export function Catalogue({saved=false,discover=false}:{saved?:boolean;discover?:boolean}){
- const {t,boot}=useUI();const [filters,setFilters]=useState({q:'',district:'',university:'',max:'',type:'',date:'',sort:'recommended',eligible:discover}),[ready,setReady]=useState(false),[selection,setSelection]=useState<string[]>([]),[last,setLast]=useState(''),[showFilters,setShowFilters]=useState(false);const touch=useRef<number|null>(null);
- useEffect(()=>{const p=new URLSearchParams(window.location.search);setFilters(f=>({...f,q:p.get('q')||'',district:p.get('district')||'',university:p.get('university')||'',max:p.get('max')||'',date:p.get('date')||''}));setReady(true);},[]);
- const params=new URLSearchParams();Object.entries(filters).forEach(([k,v])=>{if(v)params.set(k,String(v));});if(saved)params.set('saved','true');if(discover)params.set('discover','true');
- const resource=useResource('listings?'+params),{data,loading,error,refresh}=resource;const homes:Home[]=data?.homes||[];const set=(key:string,value:string|boolean)=>setFilters(f=>({...f,[key]:value}));
- const choose=(id:string)=>setSelection(s=>s.includes(id)?s.filter(x=>x!==id):s.length<4?[...s,id]:s);
- const swipe=async(action:string)=>{if(!homes[0])return;const id=homes[0].id;await api('interactions',{listingId:id,action});setLast(id);await refresh();};
- return <div className={boot?.user?'':'container page-space'}><PageTitle eyebrow={saved?'Your shortlist':discover?'A home that fits you':'MAKE YOURSELF AT HOME'} title={saved?'Saved homes':discover?'Discover your next home.':'Explore student homes'} description={saved?'Your favourites, in one place. A save is never a booking.':discover?'One home at a time. Every fit score has a reason.':'Thoughtfully laid out, so you can focus on what matters.'}><Button variant="outline" onClick={()=>setShowFilters(!showFilters)}><SlidersHorizontal size={17}/>{t('Filters')}</Button></PageTitle>
- {!saved&&<div className={'filter-bar '+(showFilters?'expanded':'')}><Field label="Search" value={filters.q} placeholder={t('Search by area or title')} onChange={e=>set('q',e.target.value)}/><Select label="Neighbourhood" value={filters.district} onChange={v=>set('district',v)} options={districts} blank="Any neighbourhood"/><Field label="Maximum rent" type="number" min="1000" value={filters.max} placeholder="HKD / month" onChange={e=>set('max',e.target.value)}/><Select label="Room type" value={filters.type} onChange={v=>set('type',v)} options={roomTypes.slice(1)} blank="Any"/>{showFilters&&<><Select label="University" value={filters.university} onChange={v=>set('university',v)} options={universities} blank="All universities"/><Field label="Move-in date" type="date" value={filters.date} onChange={e=>set('date',e.target.value)}/>{boot?.user&&<label className="checkbox-line"><input type="checkbox" checked={filters.eligible} onChange={e=>set('eligible',e.target.checked)}/>{t('Only eligible homes')}</label>}</>}</div>}
- <div className="results-bar"><p><strong>{data?.total??'—'}</strong> {saved?'saved':'sample'} homes <span>· Fictional inventory</span></p><select aria-label="Sort homes" value={filters.sort} onChange={e=>set('sort',e.target.value)}>{[['recommended','Recommended'],['price-asc','Rent: low to high'],['price-desc','Rent: high to low'],['newest','Newest']].map(([v,l])=><option key={v} value={v}>{t(l)}</option>)}</select></div>
- {error?<ResourceError error={error} retry={refresh}/>:loading||!ready?<Loading/>:!homes.length?<Empty title={discover?'No more homes in this deck.':'No homes found'}><span>Try a different budget, area or room type.</span><br/><Button variant="outline" onClick={()=>setFilters({q:'',district:'',university:'',max:'',type:'',date:'',sort:'recommended',eligible:false})}>{t('Clear filters')}</Button>{discover&&<Action variant="outline" run={async()=>{await api('interactions',{listingId:'all',action:'RESET'});await refresh();}}>{t('Reset passed homes')}</Action>}</Empty>:discover?<div className="discovery-layout"><div className="swipe-card" onTouchStart={e=>{touch.current=e.touches[0].clientX;}} onTouchEnd={e=>{if(touch.current!==null){const delta=e.changedTouches[0].clientX-touch.current;if(Math.abs(delta)>100)swipe(delta>0?'SAVE':'PASS').catch(()=>{});touch.current=null;}}}><HomeCard home={homes[0]} onChange={refresh}/><div className="swipe-actions"><Action variant="outline round" run={()=>swipe('PASS')}><X size={24}/><span>{t('Pass')}</span></Action><Action variant="outline round" run={async()=>{if(last){await api('interactions',{listingId:last,action:'UNDO'});setLast('');await refresh();}}}><RotateCcw size={20}/><span>{t('Undo')}</span></Action><Action variant="round" run={()=>swipe('SAVE')}><Heart size={24}/><span>{t('Save home')}</span></Action></div></div><section className="panel"><h2>{t('Your fit, explained')}</h2><FitDetails home={homes[0]}/><LinkButton variant="outline" href="/app/preferences">{t('Check your preferences')}<ArrowRight size={16}/></LinkButton></section></div>:<div className="home-grid catalogue-grid">{homes.map(h=><HomeCard key={h.id} home={h} onChange={saved?refresh:undefined} compare={selection.includes(h.id)} onCompare={choose}/>)}</div>}
- {selection.length>0&&<div className="compare-tray"><strong>{selection.length} of 4 homes selected</strong><LinkButton href={'/app/compare?ids='+selection.join(',')} variant="light">{t('Compare')}<ArrowRight size={16}/></LinkButton><button className="icon-btn" onClick={()=>setSelection([])} aria-label="Clear comparison"><X/></button></div>}
- </div>;
+export function HomePage() {
+  const { t, boot, demo } = useUI(),
+    { data } = useResource("listings");
+  return (
+    <>
+      <section className="hero">
+        <div className="hero-content">
+          <div className="hero-kicker">
+            <span /> HONG KONG LIVING, MADE PERSONAL
+          </div>
+          <h1>
+            {t("Your next chapter,")}
+            <br />
+            <em>{t("starts with a home.")}</em>
+          </h1>
+          <p>
+            {t("Find your place in Hong Kong, before you arrive.")}
+            <br />
+            Thoughtful matches. Clear details. A little less unknown.
+          </p>
+          <div className="hero-buttons">
+            {boot?.user?.role === "STUDENT" ? (
+              <LinkButton href="/app/onboarding">
+                {t("Find my match")}
+                <ArrowRight size={18} />
+              </LinkButton>
+            ) : boot?.user ? (
+              <LinkButton
+                href={boot.user.role === "AGENT" ? "/agent" : "/admin"}
+              >
+                {t("Your dashboard")}
+                <ArrowRight size={18} />
+              </LinkButton>
+            ) : (
+              <Button onClick={demo}>
+                {t("Try the demo")}
+                <ArrowRight size={18} />
+              </Button>
+            )}
+            <a className="text-link" href="/how-it-works">
+              {t("How it works")}
+              <ArrowUpRight size={17} />
+            </a>
+          </div>
+          <div className="hero-notes">
+            <span>
+              <Check size={15} />
+              Your preferences, your pace
+            </span>
+            <span>
+              <Check size={15} />
+              No platform payments
+            </span>
+          </div>
+        </div>
+        <div className="hero-visual">
+          <MediaImage
+            className="city-photo"
+            src="/images/hong-kong.jpg"
+            alt="Victoria Harbour, Hong Kong at dusk"
+            fetchPriority="high"
+          />
+          <div className="city-overlay" />
+          <div className="city-caption">
+            <MapPin size={15} />A new chapter in Hong Kong
+          </div>
+          <div className="floating-home">
+            <MediaImage
+              src="/images/room-1.jpg"
+              alt="Illustrative bright bedroom"
+            />
+            <div>
+              <Badge kind="green">A place to call your own</Badge>
+              <strong>Small space. Big possibilities.</strong>
+              <span>
+                Discover your student home <ArrowUpRight size={15} />
+              </span>
+            </div>
+          </div>
+          <div className="hero-stamp">
+            <HouseGlyph />
+            <span>
+              MADE FOR
+              <br />
+              <strong>your next chapter</strong>
+            </span>
+          </div>
+        </div>
+      </section>
+      <div className="search-wrap container">
+        <HeroSearch />
+        <p className="search-hint">
+          Exploring for your next semester? All homes shown are fictional sample
+          listings.
+        </p>
+      </div>
+      <section className="university-strip container">
+        <p>
+          Wherever you study,
+          <br />
+          <strong>feel a little more at home.</strong>
+        </p>
+        <div>
+          {["HKU", "CUHK", "CityUHK", "PolyU", "HKUST"].map((u, i) => (
+            <span key={u}>
+              <GraduationCap size={i % 2 ? 24 : 28} />
+              {u}
+            </span>
+          ))}
+        </div>
+        <small>
+          Independent platform.
+          <br />
+          No university affiliation.
+        </small>
+      </section>
+      <section className="section container">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">FIND YOUR CORNER OF THE CITY</span>
+            <h2>{t("A place for your everyday.")}</h2>
+            <p>Study sessions, slow mornings, and everything in between.</p>
+          </div>
+          <a href="/listings" className="text-link">
+            {t("View all homes")}
+            <ArrowRight size={18} />
+          </a>
+        </div>
+        <div className="home-grid">
+          {data?.homes
+            .slice(0, 3)
+            .map((h: Home) => <HomeCard key={h.id} home={h} />) ||
+            [1, 2, 3].map((i) => (
+              <div className="skeleton home-skeleton" key={i} />
+            ))}
+        </div>
+      </section>
+      <section className="directory-callout container">
+        <div>
+          <span className="eyebrow">REAL-WORLD HOUSING SOURCES</span>
+          <h2>Compare more places to look.</h2>
+          <p>
+            Explore established Hong Kong property platforms and student
+            residence operators in one independent directory.
+          </p>
+        </div>
+        <LinkButton href="/housing-directory" variant="light">
+          Browse the directory
+          <ArrowRight size={18} />
+        </LinkButton>
+      </section>
+      <section className="process-section">
+        <div className="container">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">
+                LESS GUESSWORK. MORE POSSIBILITIES.
+              </span>
+              <h2>A new home, in a few thoughtful steps.</h2>
+            </div>
+            <p>
+              From “where do I start?”
+              <br />
+              to a conversation that moves you forward.
+            </p>
+          </div>
+          <div className="steps-grid">
+            {[
+              [
+                SlidersHorizontal,
+                "01",
+                "Tell us what feels right",
+                "Your university, your budget, your plans. You set the preferences.",
+              ],
+              [
+                Heart,
+                "02",
+                "Meet your possible homes",
+                "Browse or swipe. See why a place fits, and where you may compromise.",
+              ],
+              [
+                ShieldCheck,
+                "03",
+                "Connect on your terms",
+                "Choose a provider to contact. Review what you share before sending.",
+              ],
+            ].map(([Icon, num, title, desc]: any) => (
+              <div className="process-step" key={num}>
+                <div className="step-top">
+                  <span className="step-icon">
+                    <Icon size={23} />
+                  </span>
+                  <span>{num}</span>
+                </div>
+                <h3>{title}</h3>
+                <p>{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="roommate-section container">
+        <div className="roommate-art">
+          <span className="orbit one" />
+          <span className="orbit two" />
+          <span className="avatar-art a">
+            J<span>Quiet study 📚</span>
+          </span>
+          <span className="avatar-art b">
+            A<span>Cooking together 🍜</span>
+          </span>
+          <span className="avatar-art c">
+            S<span>A tidy home 🌱</span>
+          </span>
+          <div className="center-heart">
+            <Heart size={30} />
+          </div>
+          <Badge kind="art">A good home starts with good company.</Badge>
+        </div>
+        <div>
+          <span className="eyebrow">YOUR SPACE. YOUR PEOPLE.</span>
+          <h2>{t("Find your kind of flatmate.")}</h2>
+          <p>
+            Early bird or night owl? Shared dinners or quiet evenings? Choose up
+            to three things that matter, and meet people with a similar idea of
+            home.
+          </p>
+          <div className="inline-points">
+            <span>
+              <Check size={16} />
+              Always opt-in
+            </span>
+            <span>
+              <Check size={16} />
+              Mutual consent to chat
+            </span>
+          </div>
+          <LinkButton
+            href={
+              boot?.user?.role === "STUDENT" ? "/app/roommates" : "/roommates"
+            }
+          >
+            {t("Discover roommates")}
+            <ArrowRight size={18} />
+          </LinkButton>
+          <small>
+            Illustrative personas. Your contact details stay private.
+          </small>
+        </div>
+      </section>
+      <section className="provider-banner container">
+        <div>
+          <span className="eyebrow">FOR HOUSING PROVIDERS</span>
+          <h2>
+            You have the space.
+            <br />
+            They have a new chapter ahead.
+          </h2>
+          <p>Share your property with students whose plans fit yours.</p>
+        </div>
+        <LinkButton href="/for-agents" variant="light">
+          {t("List a home")}
+          <ArrowUpRight size={19} />
+        </LinkButton>
+      </section>
+      <section className="section container faq-section">
+        <div>
+          <span className="eyebrow">A LITTLE MORE CLARITY</span>
+          <h2>
+            Good questions.
+            <br />
+            Straightforward answers.
+          </h2>
+          <a href="/faq" className="text-link">
+            {t("Help & FAQ")}
+            <ArrowRight size={16} />
+          </a>
+        </div>
+        <FAQ />
+      </section>
+    </>
+  );
 }
-export function ReportDialog({objectId,onClose}:{objectId:string;onClose:()=>void}){const {notify,t}=useUI();return <Modal title="Report a concern" onClose={onClose}><Form submit="Submit" onSubmit={async f=>{await api('reports',{objectId,category:f.get('category'),body:f.get('body')});notify('Your report has been received.');onClose();}}><Field label="Category"><select name="category">{['Inaccurate listing','Suspicious provider','Harassment','Privacy','Other'].map(x=><option key={x}>{x}</option>)}</select></Field><Field label="Description"><textarea name="body" required minLength={5} maxLength={2000}/></Field><p className="muted small">Our review team can see this report. Please do not include identity documents.</p></Form></Modal>;}
-export function Detail({id}:{id:string}){
- const {boot,t,notify}=useUI(),{data,error,loading,refresh}=useResource('listings/'+id);const [intro,setIntro]=useState(false),[report,setReport]=useState(false),[gallery,setGallery]=useState(false),[tour,setTour]=useState(false),[index,setIndex]=useState(0);
- if(error)return <ResourceError error={error} retry={refresh}/>;if(loading||!data)return <Loading/>;const h:Home=data.home;
- return <div className="container page-space"><a className="back-link" href={boot?.user?'/app/search':'/listings'}><ArrowLeft size={16}/>{t('Explore homes')}</a><PageTitle eyebrow={h.district} title={h.title} description="Fictional sample listing · Illustrative stock photography"><Badge kind="green">{h.reviewScope||'Information not reviewed'}</Badge></PageTitle><div className="detail-gallery"><button onClick={()=>setGallery(true)}><MediaImage src={h.images[0]} alt="Illustrative sample room interior"/></button><div className="gallery-side"><div><span className="eyebrow">A SPACE FOR YOUR NEXT CHAPTER</span><h2>{t(h.type)}<br/>in {h.district}</h2><p>Take a closer look.<br/>Imagine your everyday.</p><Button variant="light" onClick={()=>setGallery(true)}>{t('Photo gallery')}<Maximize size={16}/></Button></div></div><span className="gallery-disclosure">Photos illustrate the demo; they do not depict an actual listed property.</span></div>
- <div className="detail-columns"><div><div className="detail-facts">{[[BedDouble,t(h.type)],[Maximize,h.area+' sq ft'],[CalendarDays,h.minMonths+'–'+h.maxMonths+' month lease']].map(([Icon,value]:any)=><span key={value}><Icon size={20}/>{value}</span>)}</div><section className="detail-section"><h2>{t('About this home')}</h2><p>{h.description}</p>{h.sampleSourceName&&h.sampleSourceUrl&&<div className="source-disclosure"><Info size={18}/><p><strong>Sample reference source: <a href={h.sampleSourceUrl} target="_blank" rel="noopener noreferrer">{h.sampleSourceName}<ExternalLink size={13}/></a></strong>This fictional demo record uses the named portal only as a market reference. It was not copied from, published by, or verified by that source.</p></div>}</section><section className="detail-section"><h2>{t('Amenities')}</h2><div className="amenity-grid">{h.amenities.map(a=><span key={a}><Check size={17}/>{t(a)}</span>)}</div></section><section className="detail-section"><h2>{t('Rent & other costs')}</h2><dl className="facts-list"><div><dt>Monthly rent</dt><dd>{money(h.rent)}</dd></div><div><dt>{t('Deposit')}</dt><dd>{money(h.deposit)} · paid to provider if agreed</dd></div><div><dt>{t('Additional fees')}</dt><dd>{h.fee?money(h.fee):'None declared in sample'}</dd></div><div><dt>Utilities</dt><dd>{h.utilities}</dd></div></dl></section><section className="detail-section"><h2>{t('Availability')}</h2><p>{h.from?'Listed window: '+h.from+' to '+h.until:'Availability not confirmed'}</p><p className="muted">Last confirmed: {h.confirmedAt?new Date(h.confirmedAt).toLocaleDateString():'Not confirmed'}. All availability is fictional.</p><h3>{t('House rules')}</h3><p>{h.rules}</p><h3>Accessibility</h3><p>{h.accessibility}</p></section><section className="detail-section" id="room-preview"><h2>3D room preview</h2><DemoRoom3D homeId={h.id}/>{h.tour?<><Button variant="outline" onClick={()=>setTour(!tour)}>{t('View tour')}</Button>{tour&&<><iframe title="Provider virtual tour" src={h.tour} sandbox="allow-scripts allow-same-origin allow-pointer-lock" allow="fullscreen" referrerPolicy="no-referrer"/><p className="muted">If the provider cannot load, <button className="link-button" onClick={()=>{setTour(false);setGallery(true);}}>open the photo gallery</button>.</p></>}<p className="muted small">This provider-supplied tour is separate from the illustrated demo room.</p></>:null}</section><section className="detail-section"><h2>{t('Your fit, explained')}</h2><FitDetails home={h}/></section></div>
- <aside><div className="intro-panel panel"><div className="rent-large">{money(h.rent)} <small>/ month</small></div><p className="muted">{t(h.type)} · {h.district}</p><hr/><div className="provider-person"><span className="avatar">{h.providerName?.[0]||'H'}</span><div><strong>{h.providerName}</strong><small>{h.providerType==='LANDLORD'?'Direct landlord':'Housing agent'} · fictional</small></div></div><p className="small muted">Sample submitted fields reviewed. No ownership, licence or independent property inspection is implied.</p>{!boot?.user?<LinkButton href={'/login?next='+encodeURIComponent('/listings/'+id)}>{t('Sign in')} to request an intro<ArrowRight size={16}/></LinkButton>:boot.user.role==='STUDENT'?<><Button onClick={()=>setIntro(true)}>{t('Request introduction')}<ArrowRight size={17}/></Button><Action variant="outline" run={async()=>{await api('interactions',{listingId:id,action:h.saved?'NONE':'SAVE'});await refresh();}}><Heart size={17} fill={h.saved?'currentColor':'none'}/>{t(h.saved?'Saved':'Save home')}</Action></>:<LinkButton variant="outline" href={boot.user.role==='AGENT'?'/agent':'/admin'}>Open your workspace</LinkButton>}<small className="center">An introduction is not a reservation or lease.</small></div><div className="safety-note"><ShieldCheck size={22}/><div><strong>Take your time. Check the details.</strong><p>Independently confirm the property, provider and rental terms before agreeing to anything.</p><a href="/safety">Our safety guide <ArrowUpRight size={14}/></a></div></div>{boot?.user&&<button className="text-link" onClick={()=>setReport(true)}>{t('Report a concern')}</button>}</aside></div>
- {intro&&<Modal title="Request introduction" onClose={()=>setIntro(false)}><p>We will share the details below with <strong>{h.providerName}</strong>. Your email and phone number are not included.</p><dl className="snapshot"><div><dt>Alias</dt><dd>{boot?.user?.name}</dd></div><div><dt>University</dt><dd>{boot?.profile.university||'Complete your profile'}</dd></div><div><dt>Budget</dt><dd>{money(boot?.profile.budget||0)} / month</dd></div><div><dt>Move-in</dt><dd>{boot?.profile.start} — {boot?.profile.end}</dd></div><div><dt>Lease</dt><dd>{boot?.profile.months} months</dd></div></dl>{!boot?.profile.complete?<LinkButton href="/app/onboarding">Complete your housing profile</LinkButton>:<Form submit="Send request" onSubmit={async f=>{const r=await api('inquiries',{listingId:id,message:f.get('message'),consent:f.get('consent')==='on'});window.location.href='/app/inquiries/'+r.id;}}><Field label="Your message"><textarea name="message" required maxLength={2000} placeholder="Tell the provider what you would like to know."/></Field><label className="checkbox-line"><input type="checkbox" name="consent" required/>I agree to share my alias, university, budget, dates, lease preference and message with this provider. <a href="/privacy">Privacy</a></label><Notice>This is a fictional demo introduction. No booking, lease or payment is created.</Notice></Form>}</Modal>}
- {report&&<ReportDialog objectId={id} onClose={()=>setReport(false)}/>}{gallery&&<Modal title="Photo gallery" onClose={()=>setGallery(false)}><MediaImage className="full-photo" src={h.images[index]} alt={'Illustrative interior '+(index+1)}/><p className="muted small">Illustrative stock photo · {index+1} / {h.images.length}</p>{h.images.length>1&&<div className="actions"><Button variant="outline" onClick={()=>setIndex((index+h.images.length-1)%h.images.length)}>{t('Back')}</Button><Button onClick={()=>setIndex((index+1)%h.images.length)}>{t('Next')}</Button></div>}</Modal>}
- </div>;
+export function HousingDirectory() {
+  const platforms = housingDirectory.filter(
+      (x) => x.category === "Property platform",
+    ),
+    residences = housingDirectory.filter(
+      (x) => x.category === "Student residence",
+    );
+  const group = (
+    title: string,
+    description: string,
+    entries: typeof housingDirectory,
+  ) => (
+    <section className="directory-group">
+      <div className="directory-group-heading">
+        <div>
+          <span className="eyebrow">{title}</span>
+          <h2>
+            {title === "PROPERTY PLATFORMS"
+              ? "Search the wider rental market."
+              : "Explore student-focused residences."}
+          </h2>
+          <p>{description}</p>
+        </div>
+        <span>{entries.length} sources</span>
+      </div>
+      <div className="directory-grid">
+        {entries.map((entry) => (
+          <article className="directory-card" key={entry.name}>
+            <div className="directory-card-top">
+              <span className="directory-icon">
+                <Building2 size={22} />
+              </span>
+              <span className="directory-type">{entry.category}</span>
+            </div>
+            <h3>{entry.name}</h3>
+            <p>{entry.summary}</p>
+            {entry.audience && (
+              <div className="audience-note">
+                <GraduationCap size={16} />
+                <span>
+                  <strong>Eligibility stated by provider</strong>
+                  {entry.audience}
+                </span>
+              </div>
+            )}
+            <ul>
+              {entry.details.map((detail) => (
+                <li key={detail}>
+                  <Check size={14} />
+                  {detail}
+                </li>
+              ))}
+            </ul>
+            <a
+              className="directory-link"
+              href={entry.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Visit official website
+              <ExternalLink size={15} />
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+  return (
+    <div className="container page-space directory-page">
+      <PageTitle
+        eyebrow="HOUSING INFORMATION HUB"
+        title="More ways to find a home in Hong Kong."
+        description="A curated starting point for students comparing the general rental market and purpose-built residences."
+      />
+      <Notice>
+        <span className="directory-notice">
+          <Info size={18} />
+          <span>
+            <strong>Independent directory, not an endorsement.</strong> EduStay
+            is not affiliated with these organisations and does not import or
+            verify their live inventory. Prices, eligibility, deposits and
+            availability can change—confirm everything on the provider’s
+            official site before paying or signing.
+          </span>
+        </span>
+      </Notice>
+      {group(
+        "PROPERTY PLATFORMS",
+        "Broad rental portals may include agent and owner listings. Check the advertiser’s identity, licence where applicable, fees and lease terms independently.",
+        platforms,
+      )}
+      {group(
+        "STUDENT RESIDENCES",
+        "Operator-managed accommodation can offer furnished rooms and student-oriented services. Eligibility, lease length and payment schedules differ.",
+        residences,
+      )}
+      <p className="directory-updated">
+        Information reviewed from official provider websites on 3 November 2026.
+        External sites open in a new tab.
+      </p>
+    </div>
+  );
 }
-export function Compare(){const {t}=useUI(),{data,error,loading,refresh}=useResource('listings'),[ids,setIds]=useState<string[]>([]);useEffect(()=>setIds((new URLSearchParams(location.search).get('ids')||'').split(',').slice(0,4)),[]);if(error)return <ResourceError error={error} retry={refresh}/>;if(loading)return <Loading/>;const homes:Home[]=data?.homes.filter((h:Home)=>ids.includes(h.id))||[];return <><PageTitle title="Compare" description="The details, side by side. Choose up to four homes."/>{homes.length?<div className="comparison"><table><thead><tr><th>Home</th>{homes.map(h=><th key={h.id}><MediaImage src={h.images[0]} alt="Illustrative room"/><a href={'/listings/'+h.id}>{h.title}</a></th>)}</tr></thead><tbody>{[['Monthly rent',(h:Home)=>money(h.rent)],['Deposit',(h:Home)=>money(h.deposit)],['Neighbourhood',(h:Home)=>h.district],['Room type',(h:Home)=>t(h.type)],['Floor area',(h:Home)=>h.area+' sq ft'],['Lease',(h:Home)=>h.minMonths+'–'+h.maxMonths+' months'],['Available from',(h:Home)=>h.from||'Not confirmed'],['Fit',(h:Home)=>h.match?.score==null?'Add preferences':h.match.score+'%'],['Amenities',(h:Home)=>h.amenities.map(t).join(', ')]].map(([label,get]:any)=><tr key={label}><th>{t(label)}</th>{homes.map(h=><td key={h.id}>{get(h)}</td>)}</tr>)}</tbody></table></div>:<Empty title="Select homes to compare" href="/app/search"/>}</>;}
+function HouseGlyph() {
+  return (
+    <svg
+      width="34"
+      height="34"
+      viewBox="0 0 36 36"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="m5 17 13-11 13 11v14H22V20h-8v11H5Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+export function FAQ() {
+  return (
+    <div className="faq-list">
+      {[
+        [
+          "Does EduStay rent out these homes?",
+          "EduStay is a discovery and introduction platform. The provider manages viewings and any actual lease. This demo contains fictional homes, providers and availability.",
+        ],
+        [
+          "What does a fit score mean?",
+          "A deterministic comparison of your budget, preferred area, dates, room type and amenities. Missing criteria are disclosed. It is not a safety rating or a reservation.",
+        ],
+        [
+          "Are deposits or payments handled here?",
+          "No. EduStay does not collect rent, hold deposits, provide escrow or guarantee a lease. Independently check a provider and rental terms before making any real arrangement.",
+        ],
+        [
+          "Who can see my information?",
+          "Your housing profile stays private. An introduction shares only the stated alias, university, budget, dates and message with that home’s provider after your consent. Roommate chats require mutual acceptance.",
+        ],
+      ].map(([q, a]) => (
+        <details key={q}>
+          <summary>
+            {q}
+            <span>+</span>
+          </summary>
+          <p>{a}</p>
+        </details>
+      ))}
+    </div>
+  );
+}
+export function Catalogue({
+  saved = false,
+  discover = false,
+}: {
+  saved?: boolean;
+  discover?: boolean;
+}) {
+  const { t, boot } = useUI();
+  const [filters, setFilters] = useState({
+      q: "",
+      district: "",
+      university: "",
+      max: "",
+      type: "",
+      date: "",
+      sort: "recommended",
+      eligible: discover,
+    }),
+    [ready, setReady] = useState(false),
+    [selection, setSelection] = useState<string[]>([]),
+    [last, setLast] = useState(""),
+    [showFilters, setShowFilters] = useState(false);
+  const touch = useRef<number | null>(null);
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    setFilters((f) => ({
+      ...f,
+      q: p.get("q") || "",
+      district: p.get("district") || "",
+      university: p.get("university") || "",
+      max: p.get("max") || "",
+      date: p.get("date") || "",
+    }));
+    setReady(true);
+  }, []);
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([k, v]) => {
+    if (v) params.set(k, String(v));
+  });
+  if (saved) params.set("saved", "true");
+  if (discover) params.set("discover", "true");
+  const resource = useResource("listings?" + params),
+    { data, loading, error, refresh } = resource;
+  const homes: Home[] = data?.homes || [];
+  const set = (key: string, value: string | boolean) =>
+    setFilters((f) => ({ ...f, [key]: value }));
+  const choose = (id: string) =>
+    setSelection((s) =>
+      s.includes(id)
+        ? s.filter((x) => x !== id)
+        : s.length < 4
+          ? [...s, id]
+          : s,
+    );
+  const swipe = async (action: string) => {
+    if (!homes[0]) return;
+    const id = homes[0].id;
+    await api("interactions", { listingId: id, action });
+    setLast(id);
+    await refresh();
+  };
+  return (
+    <div className={boot?.user ? "" : "container page-space"}>
+      <PageTitle
+        eyebrow={
+          saved
+            ? "Your shortlist"
+            : discover
+              ? "A home that fits you"
+              : "MAKE YOURSELF AT HOME"
+        }
+        title={
+          saved
+            ? "Saved homes"
+            : discover
+              ? "Discover your next home."
+              : "Explore student homes"
+        }
+        description={
+          saved
+            ? "Your favourites, in one place. A save is never a booking."
+            : discover
+              ? "One home at a time. Every fit score has a reason."
+              : "Thoughtfully laid out, so you can focus on what matters."
+        }
+      >
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <SlidersHorizontal size={17} />
+          {t("Filters")}
+        </Button>
+      </PageTitle>
+      {!saved && (
+        <div className={"filter-bar " + (showFilters ? "expanded" : "")}>
+          <Field
+            label="Search"
+            value={filters.q}
+            placeholder={t("Search by area or title")}
+            onChange={(e) => set("q", e.target.value)}
+          />
+          <Select
+            label="Neighbourhood"
+            value={filters.district}
+            onChange={(v) => set("district", v)}
+            options={districts}
+            blank="Any neighbourhood"
+          />
+          <Field
+            label="Maximum rent"
+            type="number"
+            min="1000"
+            value={filters.max}
+            placeholder="HKD / month"
+            onChange={(e) => set("max", e.target.value)}
+          />
+          <Select
+            label="Room type"
+            value={filters.type}
+            onChange={(v) => set("type", v)}
+            options={roomTypes.slice(1)}
+            blank="Any"
+          />
+          {showFilters && (
+            <>
+              <Select
+                label="University"
+                value={filters.university}
+                onChange={(v) => set("university", v)}
+                options={universities}
+                blank="All universities"
+              />
+              <Field
+                label="Move-in date"
+                type="date"
+                value={filters.date}
+                onChange={(e) => set("date", e.target.value)}
+              />
+              {boot?.user && (
+                <label className="checkbox-line">
+                  <input
+                    type="checkbox"
+                    checked={filters.eligible}
+                    onChange={(e) => set("eligible", e.target.checked)}
+                  />
+                  {t("Only eligible homes")}
+                </label>
+              )}
+            </>
+          )}
+        </div>
+      )}
+      <div className="results-bar">
+        <p>
+          <strong>{data?.total ?? "—"}</strong> {saved ? "saved" : "sample"}{" "}
+          homes <span>· Fictional inventory</span>
+        </p>
+        <select
+          aria-label="Sort homes"
+          value={filters.sort}
+          onChange={(e) => set("sort", e.target.value)}
+        >
+          {[
+            ["recommended", "Recommended"],
+            ["price-asc", "Rent: low to high"],
+            ["price-desc", "Rent: high to low"],
+            ["newest", "Newest"],
+          ].map(([v, l]) => (
+            <option key={v} value={v}>
+              {t(l)}
+            </option>
+          ))}
+        </select>
+      </div>
+      {error ? (
+        <ResourceError error={error} retry={refresh} />
+      ) : loading || !ready ? (
+        <Loading />
+      ) : !homes.length ? (
+        <Empty
+          title={discover ? "No more homes in this deck." : "No homes found"}
+        >
+          <span>Try a different budget, area or room type.</span>
+          <br />
+          <Button
+            variant="outline"
+            onClick={() =>
+              setFilters({
+                q: "",
+                district: "",
+                university: "",
+                max: "",
+                type: "",
+                date: "",
+                sort: "recommended",
+                eligible: false,
+              })
+            }
+          >
+            {t("Clear filters")}
+          </Button>
+          {discover && (
+            <Action
+              variant="outline"
+              run={async () => {
+                await api("interactions", {
+                  listingId: "all",
+                  action: "RESET",
+                });
+                await refresh();
+              }}
+            >
+              {t("Reset passed homes")}
+            </Action>
+          )}
+        </Empty>
+      ) : discover ? (
+        <div className="discovery-layout">
+          <div
+            className="swipe-card"
+            onTouchStart={(e) => {
+              touch.current = e.touches[0].clientX;
+            }}
+            onTouchEnd={(e) => {
+              if (touch.current !== null) {
+                const delta = e.changedTouches[0].clientX - touch.current;
+                if (Math.abs(delta) > 100)
+                  swipe(delta > 0 ? "SAVE" : "PASS").catch(() => {});
+                touch.current = null;
+              }
+            }}
+          >
+            <HomeCard home={homes[0]} onChange={refresh} />
+            <div className="swipe-actions">
+              <Action variant="outline round" run={() => swipe("PASS")}>
+                <X size={24} />
+                <span>{t("Pass")}</span>
+              </Action>
+              <Action
+                variant="outline round"
+                run={async () => {
+                  if (last) {
+                    await api("interactions", {
+                      listingId: last,
+                      action: "UNDO",
+                    });
+                    setLast("");
+                    await refresh();
+                  }
+                }}
+              >
+                <RotateCcw size={20} />
+                <span>{t("Undo")}</span>
+              </Action>
+              <Action variant="round" run={() => swipe("SAVE")}>
+                <Heart size={24} />
+                <span>{t("Save home")}</span>
+              </Action>
+            </div>
+          </div>
+          <section className="panel">
+            <h2>{t("Your fit, explained")}</h2>
+            <FitDetails home={homes[0]} />
+            <LinkButton variant="outline" href="/app/preferences">
+              {t("Check your preferences")}
+              <ArrowRight size={16} />
+            </LinkButton>
+          </section>
+        </div>
+      ) : (
+        <div className="home-grid catalogue-grid">
+          {homes.map((h) => (
+            <HomeCard
+              key={h.id}
+              home={h}
+              onChange={saved ? refresh : undefined}
+              compare={selection.includes(h.id)}
+              onCompare={choose}
+            />
+          ))}
+        </div>
+      )}
+      {selection.length > 0 && (
+        <div className="compare-tray">
+          <strong>{selection.length} of 4 homes selected</strong>
+          <LinkButton
+            href={"/app/compare?ids=" + selection.join(",")}
+            variant="light"
+          >
+            {t("Compare")}
+            <ArrowRight size={16} />
+          </LinkButton>
+          <button
+            className="icon-btn"
+            onClick={() => setSelection([])}
+            aria-label="Clear comparison"
+          >
+            <X />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+export function ReportDialog({
+  objectId,
+  onClose,
+}: {
+  objectId: string;
+  onClose: () => void;
+}) {
+  const { notify, t } = useUI();
+  return (
+    <Modal title="Report a concern" onClose={onClose}>
+      <Form
+        submit="Submit"
+        onSubmit={async (f) => {
+          await api("reports", {
+            objectId,
+            category: f.get("category"),
+            body: f.get("body"),
+          });
+          notify("Your report has been received.");
+          onClose();
+        }}
+      >
+        <Field label="Category">
+          <select name="category">
+            {[
+              "Inaccurate listing",
+              "Suspicious provider",
+              "Harassment",
+              "Privacy",
+              "Other",
+            ].map((x) => (
+              <option key={x}>{x}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Description">
+          <textarea name="body" required minLength={5} maxLength={2000} />
+        </Field>
+        <p className="muted small">
+          Our review team can see this report. Please do not include identity
+          documents.
+        </p>
+      </Form>
+    </Modal>
+  );
+}
+export function Detail({ id }: { id: string }) {
+  const { boot, t, notify } = useUI(),
+    { data, error, loading, refresh } = useResource("listings/" + id);
+  const [intro, setIntro] = useState(false),
+    [report, setReport] = useState(false),
+    [gallery, setGallery] = useState(false),
+    [tour, setTour] = useState(false),
+    [index, setIndex] = useState(0);
+  if (error) return <ResourceError error={error} retry={refresh} />;
+  if (loading || !data) return <Loading />;
+  const h: Home = data.home;
+  return (
+    <div className="container page-space">
+      <a className="back-link" href={boot?.user ? "/app/search" : "/listings"}>
+        <ArrowLeft size={16} />
+        {t("Explore homes")}
+      </a>
+      <PageTitle
+        eyebrow={h.district}
+        title={h.title}
+        description="Real-market reference snapshot · Illustrative stock photography"
+      >
+        <Badge kind="green">
+          {h.reviewScope || "Information not reviewed"}
+        </Badge>
+      </PageTitle>
+      <div className="detail-gallery">
+        <button onClick={() => setGallery(true)}>
+          <MediaImage
+            src={h.images[0]}
+            alt="Illustrative sample room interior"
+          />
+        </button>
+        <div className="gallery-side">
+          <div>
+            <span className="eyebrow">A SPACE FOR YOUR NEXT CHAPTER</span>
+            <h2>
+              {t(h.type)}
+              <br />
+              in {h.district}
+            </h2>
+            <p>
+              Take a closer look.
+              <br />
+              Imagine your everyday.
+            </p>
+            <Button variant="light" onClick={() => setGallery(true)}>
+              {t("Photo gallery")}
+              <Maximize size={16} />
+            </Button>
+          </div>
+        </div>
+        <span className="gallery-disclosure">
+          Photos illustrate the demo; they do not depict an actual listed
+          property.
+        </span>
+      </div>
+      <div className="detail-columns">
+        <div>
+          <div className="detail-facts">
+            {[
+              [BedDouble, t(h.type)],
+              [Maximize, h.area + " sq ft"],
+              [CalendarDays, h.minMonths + "–" + h.maxMonths + " month lease"],
+            ].map(([Icon, value]: any) => (
+              <span key={value}>
+                <Icon size={20} />
+                {value}
+              </span>
+            ))}
+          </div>
+          <section className="detail-section">
+            <h2>{t("About this home")}</h2>
+            <p>{h.description}</p>
+            {h.sampleSourceName && h.sampleSourceUrl && (
+              <div className="source-disclosure">
+                <Info size={18} />
+                <p>
+                  <strong>
+                    Original public listing:{" "}
+                    <a
+                      href={h.sampleSourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {h.sampleSourceName}
+                      <ExternalLink size={13} />
+                    </a>
+                  </strong>
+                  Real-market snapshot checked {h.sampleSourceCheckedAt ||
+                    "3 November 2026"}. The source may change or expire. Demo
+                  photography is illustrative and availability must be
+                  confirmed with the original publisher.
+                </p>
+              </div>
+            )}
+          </section>
+          <section className="detail-section">
+            <h2>{t("Amenities")}</h2>
+            <div className="amenity-grid">
+              {h.amenities.map((a) => (
+                <span key={a}>
+                  <Check size={17} />
+                  {t(a)}
+                </span>
+              ))}
+            </div>
+          </section>
+          <section className="detail-section">
+            <h2>{t("Rent & other costs")}</h2>
+            <dl className="facts-list">
+              <div>
+                <dt>Monthly rent</dt>
+                <dd>{money(h.rent)}</dd>
+              </div>
+              <div>
+                <dt>{t("Deposit")}</dt>
+                <dd>
+                  {h.depositConfirmed
+                    ? money(h.deposit) + " · paid to provider if agreed"
+                    : "Not stated in the public reference snapshot"}
+                </dd>
+              </div>
+              <div>
+                <dt>{t("Additional fees")}</dt>
+                <dd>{h.fee ? money(h.fee) : "None declared in sample"}</dd>
+              </div>
+              <div>
+                <dt>Utilities</dt>
+                <dd>{h.utilities}</dd>
+              </div>
+            </dl>
+          </section>
+          <section className="detail-section">
+            <h2>{t("Availability")}</h2>
+            <p>
+              {h.from
+                ? "Listed window: " + h.from + " to " + h.until
+                : "Availability not confirmed"}
+            </p>
+            <p className="muted">
+              Last confirmed:{" "}
+              {h.confirmedAt
+                ? new Date(h.confirmedAt).toLocaleDateString()
+                : "Not confirmed"}
+              . Confirm current availability on the original listing.
+            </p>
+            <h3>{t("House rules")}</h3>
+            <p>{h.rules}</p>
+            <h3>Accessibility</h3>
+            <p>{h.accessibility}</p>
+          </section>
+          <section className="detail-section" id="room-preview">
+            <h2>3D room preview</h2>
+            <DemoRoom3D homeId={h.id} />
+            {h.tour ? (
+              <>
+                <Button variant="outline" onClick={() => setTour(!tour)}>
+                  {t("View tour")}
+                </Button>
+                {tour && (
+                  <>
+                    <iframe
+                      title="Provider virtual tour"
+                      src={h.tour}
+                      sandbox="allow-scripts allow-same-origin allow-pointer-lock"
+                      allow="fullscreen"
+                      referrerPolicy="no-referrer"
+                    />
+                    <p className="muted">
+                      If the provider cannot load,{" "}
+                      <button
+                        className="link-button"
+                        onClick={() => {
+                          setTour(false);
+                          setGallery(true);
+                        }}
+                      >
+                        open the photo gallery
+                      </button>
+                      .
+                    </p>
+                  </>
+                )}
+                <p className="muted small">
+                  This provider-supplied tour is separate from the illustrated
+                  demo room.
+                </p>
+              </>
+            ) : null}
+          </section>
+          <section className="detail-section">
+            <h2>{t("Your fit, explained")}</h2>
+            <FitDetails home={h} />
+          </section>
+        </div>
+        <aside>
+          <div className="intro-panel panel">
+            <div className="rent-large">
+              {money(h.rent)} <small>/ month</small>
+            </div>
+            <p className="muted">
+              {t(h.type)} · {h.district}
+            </p>
+            <hr />
+            <div className="provider-person">
+              <span className="avatar">{h.providerName?.[0] || "H"}</span>
+              <div>
+                <strong>{h.providerName}</strong>
+                <small>
+                  {h.providerType === "LANDLORD"
+                    ? "Direct landlord"
+                    : "Housing agent"}{" "}
+                  · fictional
+                </small>
+              </div>
+            </div>
+            <p className="small muted">
+              Sample submitted fields reviewed. No ownership, licence or
+              independent property inspection is implied.
+            </p>
+            {!boot?.user ? (
+              <LinkButton
+                href={"/login?next=" + encodeURIComponent("/listings/" + id)}
+              >
+                {t("Sign in")} to request an intro
+                <ArrowRight size={16} />
+              </LinkButton>
+            ) : boot.user.role === "STUDENT" ? (
+              <>
+                <Button onClick={() => setIntro(true)}>
+                  {t("Request introduction")}
+                  <ArrowRight size={17} />
+                </Button>
+                <Action
+                  variant="outline"
+                  run={async () => {
+                    await api("interactions", {
+                      listingId: id,
+                      action: h.saved ? "NONE" : "SAVE",
+                    });
+                    await refresh();
+                  }}
+                >
+                  <Heart size={17} fill={h.saved ? "currentColor" : "none"} />
+                  {t(h.saved ? "Saved" : "Save home")}
+                </Action>
+              </>
+            ) : (
+              <LinkButton
+                variant="outline"
+                href={boot.user.role === "AGENT" ? "/agent" : "/admin"}
+              >
+                Open your workspace
+              </LinkButton>
+            )}
+            <small className="center">
+              An introduction is not a reservation or lease.
+            </small>
+          </div>
+          <div className="safety-note">
+            <ShieldCheck size={22} />
+            <div>
+              <strong>Take your time. Check the details.</strong>
+              <p>
+                Independently confirm the property, provider and rental terms
+                before agreeing to anything.
+              </p>
+              <a href="/safety">
+                Our safety guide <ArrowUpRight size={14} />
+              </a>
+            </div>
+          </div>
+          {boot?.user && (
+            <button className="text-link" onClick={() => setReport(true)}>
+              {t("Report a concern")}
+            </button>
+          )}
+        </aside>
+      </div>
+      {intro && (
+        <Modal title="Request introduction" onClose={() => setIntro(false)}>
+          <p>
+            We will share the details below with{" "}
+            <strong>{h.providerName}</strong>. Your email and phone number are
+            not included.
+          </p>
+          <dl className="snapshot">
+            <div>
+              <dt>Alias</dt>
+              <dd>{boot?.user?.name}</dd>
+            </div>
+            <div>
+              <dt>University</dt>
+              <dd>{boot?.profile.university || "Complete your profile"}</dd>
+            </div>
+            <div>
+              <dt>Budget</dt>
+              <dd>{money(boot?.profile.budget || 0)} / month</dd>
+            </div>
+            <div>
+              <dt>Move-in</dt>
+              <dd>
+                {boot?.profile.start} — {boot?.profile.end}
+              </dd>
+            </div>
+            <div>
+              <dt>Lease</dt>
+              <dd>{boot?.profile.months} months</dd>
+            </div>
+          </dl>
+          {!boot?.profile.complete ? (
+            <LinkButton href="/app/onboarding">
+              Complete your housing profile
+            </LinkButton>
+          ) : (
+            <Form
+              submit="Send request"
+              onSubmit={async (f) => {
+                const r = await api("inquiries", {
+                  listingId: id,
+                  message: f.get("message"),
+                  consent: f.get("consent") === "on",
+                });
+                window.location.href = "/app/inquiries/" + r.id;
+              }}
+            >
+              <Field label="Your message">
+                <textarea
+                  name="message"
+                  required
+                  maxLength={2000}
+                  placeholder="Tell the provider what you would like to know."
+                />
+              </Field>
+              <label className="checkbox-line">
+                <input type="checkbox" name="consent" required />I agree to
+                share my alias, university, budget, dates, lease preference and
+                message with this provider. <a href="/privacy">Privacy</a>
+              </label>
+              <Notice>
+                This is a fictional demo introduction. No booking, lease or
+                payment is created.
+              </Notice>
+            </Form>
+          )}
+        </Modal>
+      )}
+      {report && (
+        <ReportDialog objectId={id} onClose={() => setReport(false)} />
+      )}
+      {gallery && (
+        <Modal title="Photo gallery" onClose={() => setGallery(false)}>
+          <MediaImage
+            className="full-photo"
+            src={h.images[index]}
+            alt={"Illustrative interior " + (index + 1)}
+          />
+          <p className="muted small">
+            Illustrative stock photo · {index + 1} / {h.images.length}
+          </p>
+          {h.images.length > 1 && (
+            <div className="actions">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setIndex((index + h.images.length - 1) % h.images.length)
+                }
+              >
+                {t("Back")}
+              </Button>
+              <Button onClick={() => setIndex((index + 1) % h.images.length)}>
+                {t("Next")}
+              </Button>
+            </div>
+          )}
+        </Modal>
+      )}
+    </div>
+  );
+}
+export function Compare() {
+  const { t } = useUI(),
+    { data, error, loading, refresh } = useResource("listings"),
+    [ids, setIds] = useState<string[]>([]);
+  useEffect(
+    () =>
+      setIds(
+        (new URLSearchParams(location.search).get("ids") || "")
+          .split(",")
+          .slice(0, 4),
+      ),
+    [],
+  );
+  if (error) return <ResourceError error={error} retry={refresh} />;
+  if (loading) return <Loading />;
+  const homes: Home[] =
+    data?.homes.filter((h: Home) => ids.includes(h.id)) || [];
+  return (
+    <>
+      <PageTitle
+        title="Compare"
+        description="The details, side by side. Choose up to four homes."
+      />
+      {homes.length ? (
+        <div className="comparison">
+          <table>
+            <thead>
+              <tr>
+                <th>Home</th>
+                {homes.map((h) => (
+                  <th key={h.id}>
+                    <MediaImage src={h.images[0]} alt="Illustrative room" />
+                    <a href={"/listings/" + h.id}>{h.title}</a>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["Monthly rent", (h: Home) => money(h.rent)],
+                [
+                  "Deposit",
+                  (h: Home) =>
+                    h.depositConfirmed ? money(h.deposit) : "Not stated",
+                ],
+                ["Neighbourhood", (h: Home) => h.district],
+                ["Room type", (h: Home) => t(h.type)],
+                ["Floor area", (h: Home) => h.area + " sq ft"],
+                [
+                  "Lease",
+                  (h: Home) => h.minMonths + "–" + h.maxMonths + " months",
+                ],
+                ["Available from", (h: Home) => h.from || "Not confirmed"],
+                [
+                  "Fit",
+                  (h: Home) =>
+                    h.match?.score == null
+                      ? "Add preferences"
+                      : h.match.score + "%",
+                ],
+                ["Amenities", (h: Home) => h.amenities.map(t).join(", ")],
+              ].map(([label, get]: any) => (
+                <tr key={label}>
+                  <th>{t(label)}</th>
+                  {homes.map((h) => (
+                    <td key={h.id}>{get(h)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <Empty title="Select homes to compare" href="/app/search" />
+      )}
+    </>
+  );
+}
