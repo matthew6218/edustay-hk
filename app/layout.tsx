@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./directory.css";
 
 export const metadata: Metadata = {
   title: "EduStay HK — Find your place in Hong Kong",
