@@ -672,6 +672,7 @@ export function Catalogue({
     [last, setLast] = useState(""),
     [showFilters, setShowFilters] = useState(false);
   const touch = useRef<number | null>(null);
+  const swipeInFlight = useRef(false);
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     setFilters((f) => ({
@@ -691,7 +692,7 @@ export function Catalogue({
   if (saved) params.set("saved", "true");
   if (discover) params.set("discover", "true");
   const resource = useResource("listings?" + params),
-    { data, loading, error, refresh } = resource;
+    { data, loading, error, refresh, refreshSilently } = resource;
   const homes: Home[] = data?.homes || [];
   const set = (key: string, value: string | boolean) =>
     setFilters((f) => ({ ...f, [key]: value }));
@@ -704,11 +705,16 @@ export function Catalogue({
           : s,
     );
   const swipe = async (action: string) => {
-    if (!homes[0]) return;
+    if (!homes[0] || swipeInFlight.current) return;
+    swipeInFlight.current = true;
     const id = homes[0].id;
-    await api("interactions", { listingId: id, action });
-    setLast(id);
-    await refresh();
+    try {
+      await api("interactions", { listingId: id, action });
+      setLast(id);
+      await refreshSilently();
+    } finally {
+      swipeInFlight.current = false;
+    }
   };
   return (
     <div className={boot?.user ? "" : "container page-space"}>
@@ -856,7 +862,7 @@ export function Catalogue({
                   listingId: "all",
                   action: "RESET",
                 });
-                await refresh();
+                await refreshSilently();
               }}
             >
               {t("Reset passed homes")}
@@ -885,7 +891,7 @@ export function Catalogue({
                 reasons before requesting an introduction.
               </Notice>
             )}
-            <HomeCard home={homes[0]} onChange={refresh} />
+            <HomeCard home={homes[0]} onChange={refreshSilently} />
             <div className="swipe-actions">
               <Action variant="outline round" run={() => swipe("PASS")}>
                 <X size={24} />
@@ -900,7 +906,7 @@ export function Catalogue({
                       action: "UNDO",
                     });
                     setLast("");
-                    await refresh();
+                    await refreshSilently();
                   }
                 }}
               >
