@@ -59,11 +59,12 @@ export function HomeCard({
 }) {
   const { boot, t, notify } = useUI(),
     [saved, setSaved] = useState(!!h.saved);
+  const detailHref = (boot?.user?.role === "STUDENT" ? "/app/listings/" : "/listings/") + h.id;
   useEffect(() => setSaved(!!h.saved), [h.saved]);
   return (
     <article className="home-card">
       <div className="home-photo">
-        <a href={"/listings/" + h.id}>
+        <a href={detailHref}>
           <MediaImage
             src={h.images[0]}
             alt={"Illustrative interior for " + h.title}
@@ -73,7 +74,7 @@ export function HomeCard({
         <Badge kind="photo">{t("Sample listing")}</Badge>
         <a
           className={roomStyles.cardLink}
-          href={"/listings/" + h.id + "#room-preview"}
+          href={detailHref + "#room-preview"}
         >
           3D preview
         </a>
@@ -117,7 +118,7 @@ export function HomeCard({
           )}
         </div>
         <h3>
-          <a href={"/listings/" + h.id}>{h.title}</a>
+          <a href={detailHref}>{h.title}</a>
         </h3>
         <div className="home-facts">
           <span>
@@ -147,7 +148,7 @@ export function HomeCard({
             <strong>{money(h.rent)}</strong>
             <small> / month</small>
           </p>
-          <a href={"/listings/" + h.id} aria-label={"View " + h.title}>
+          <a href={detailHref} aria-label={"View " + h.title}>
             <ArrowUpRight size={21} />
           </a>
         </div>
@@ -922,10 +923,20 @@ export function Catalogue({
           <section className="panel">
             <h2>{t("Your fit, explained")}</h2>
             <FitDetails home={homes[0]} />
+            {homes[0].match?.eligible && (
+              <LinkButton href={"/app/listings/" + homes[0].id + "?ask=1"}>
+                Ask this provider about the home <ArrowRight size={15}/>
+              </LinkButton>
+            )}
             <LinkButton variant="outline" href="/app/preferences">
               {t("Check your preferences")}
               <ArrowRight size={16} />
             </LinkButton>
+            <div className="actions">
+              <Button variant="outline" onClick={() => choose(homes[0].id)}>
+                {t(selection.includes(homes[0].id) ? "Remove from compare" : "Add to compare")}
+              </Button>
+            </div>
           </section>
         </div>
       ) : (
@@ -1013,10 +1024,17 @@ export function Detail({ id }: { id: string }) {
   const { boot, t, notify } = useUI(),
     { data, error, loading, refresh } = useResource("listings/" + id);
   const [intro, setIntro] = useState(false),
+    [askFromFlow, setAskFromFlow] = useState(false),
     [report, setReport] = useState(false),
     [gallery, setGallery] = useState(false),
     [tour, setTour] = useState(false),
     [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (boot?.user?.role === "STUDENT" && new URLSearchParams(window.location.search).get("ask") === "1") {
+      setAskFromFlow(true);
+      setIntro(true);
+    }
+  }, [boot?.user?.role]);
   if (error) return <ResourceError error={error} retry={refresh} />;
   if (loading || !data) return <Loading />;
   const h: Home = data.home;
@@ -1347,7 +1365,8 @@ export function Detail({ id }: { id: string }) {
                   name="message"
                   required
                   maxLength={2000}
-                  placeholder="Tell the provider what you would like to know."
+                  defaultValue={askFromFlow ? `I'm planning to move in around ${boot?.profile.start || 'the start of term'}. Could you confirm the availability, lease dates, and how the room and keys would be handed over?` : undefined}
+                  placeholder="Ask about availability, lease dates, key pickup or room condition."
                 />
               </Field>
               <label className="checkbox-line">
@@ -1428,7 +1447,12 @@ export function Compare() {
                 {homes.map((h) => (
                   <th key={h.id}>
                     <MediaImage src={h.images[0]} alt="Illustrative room" />
-                    <a href={"/listings/" + h.id}>{h.title}</a>
+                    <a href={"/app/listings/" + h.id}>{h.title}</a>
+                    {h.match?.eligible && (
+                      <a className="ask-home-link" href={"/app/listings/" + h.id + "?ask=1"}>
+                        Ask provider <ArrowRight size={13}/>
+                      </a>
+                    )}
                   </th>
                 ))}
               </tr>
