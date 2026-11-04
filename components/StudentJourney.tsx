@@ -24,7 +24,7 @@ export default function StudentJourney({path}:{path:string}){
   return <aside className="student-journey" aria-label="Your semester housing plan">
     <div className="journey-heading">
       <span className="eyebrow">YOUR SEMESTER PLAN</span>
-      <h2>Best-fit timeline</h2>
+      <h2>Demo</h2>
       <p>Plan the move, find a fit, and ask questions as you go.</p>
     </div>
     <div className="journey-dates">

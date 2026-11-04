@@ -1,6 +1,6 @@
 # Demo walkthrough
 
-1. Choose **Try the demo → Alex**. The **Best-fit timeline** beside the student workspace shows the move-in window, an illustrative lease end, and links to each step.
+1. Choose **Try the demo → Alex**. The **Demo** panel beside the student workspace shows the move-in window, an illustrative lease end, and links to each step.
 2. Open **Housing profile** to set your own move-in dates, lease length, budget, areas and room preferences. Discovery ranks linked public listing snapshots against this profile; availability remains unconfirmed.
 3. Open **Discover**. Pass or save a home, add up to four homes to **Compare**, and inspect the fit reasons and trade-offs. The comparison shows rent, room type, lease range and known availability side by side.
 4. On an eligible home, choose **Ask this provider about the home** from Discovery or **Ask provider** from Compare. The introduction form opens with a suggested question about availability, lease dates, keys and room handover. Submit it with the sharing consent, then follow the demo conversation in **Enquiries**.
