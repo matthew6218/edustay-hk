@@ -61,7 +61,7 @@ The old Cloudflare/Sites scaffolding is retained for reference and is no longer 
 - Consent-gated introductions, provider lead inbox, status history, participant messaging after acceptance, notifications, data export and deletion request.
 - Provider application, private image uploads, listing drafts, editing, owner-only inventory and leads, reviews and availability refresh.
 - Scoped reviewer/moderator/support queues, publication and suspension, reports, account restriction and audit events.
-- Roommate discovery switched off by default, up to three opt-in priorities, mutual requests, blocking and consent-checked chat.
+- Registered students start roommate discovery switched off; the fictional demo student has a preset discoverable profile. Profiles support up to three priorities, mutual requests, blocking and consent-checked chat.
 - Privacy controls, tour/gallery fallback, HTTPS allowlisted tour embeds, request limits and security headers.
 
 ## Demo limitations

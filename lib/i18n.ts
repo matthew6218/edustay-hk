@@ -132,6 +132,7 @@ No more homes in this deck.|你已看完目前的房源。|你已看完当前房
 Find your kind of flatmate.|尋找合拍的室友。|寻找合拍的室友。
 Discover roommates|探索室友|探索室友
 My roommate profile|我的室友資料|我的室友资料
+Edit roommate profile|編輯室友資料|编辑室友资料
 Connections|配對邀請|匹配邀请
 Alias|暱稱|昵称
 About you|關於你|关于你
