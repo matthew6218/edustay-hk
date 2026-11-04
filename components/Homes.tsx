@@ -24,7 +24,7 @@ import {
   ExternalLink,
   Info,
 } from "lucide-react";
-import { type Home, districts, universities, roomTypes } from "@/lib/domain";
+import { type Home, type Profile, districts, universities, roomTypes } from "@/lib/domain";
 import { housingDirectory } from "@/lib/housing-directory";
 import {
   api,
@@ -46,6 +46,13 @@ import {
   Notice,
   money,
 } from "./ui";
+const dateLabel=(date:string)=>new Date(date+'T00:00:00Z').toLocaleDateString('en-HK',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+function MoveInNote({home,profile}:{home:Home;profile?:Profile}){
+ const target=profile?.start&&profile?.end?`${dateLabel(profile.start)}–${dateLabel(profile.end)}`:null;
+ const listed=home.from&&home.until;
+ const fits=home.match?.positiveReasons.includes('Listed dates fit your plans');
+ return <div className="move-in-note"><CalendarDays size={15}/><span><strong>{listed?(fits?'Your move-in fits the listed stay':'Listed stay window'):'Move-in dates to confirm'}</strong><small>{listed?`${dateLabel(home.from!)}–${dateLabel(home.until!)}${target?' · Your target '+target:''}`:target?'Your target '+target:'Ask the provider for current dates'}</small></span></div>;
+}
 export function HomeCard({
   home: h,
   onChange,
@@ -111,7 +118,7 @@ export function HomeCard({
             {h.district}
           </span>
           {h.match?.score !== null && h.match?.score !== undefined && (
-            <span className="fit-badge">
+            <span className="fit-badge" title={`Based on ${h.match.criteria} of 6 criteria`}>
               <Sparkles size={12} />
               {h.match.score}% fit
             </span>
@@ -130,6 +137,7 @@ export function HomeCard({
             {h.area} sq ft
           </span>
         </div>
+        <MoveInNote home={h} profile={boot?.profile}/>
         {h.sampleSourceName && h.sampleSourceUrl && (
           <p className="sample-source">
             Original listing:{" "}
@@ -1166,6 +1174,7 @@ export function Detail({ id }: { id: string }) {
           </section>
           <section className="detail-section">
             <h2>{t("Availability")}</h2>
+            <MoveInNote home={h} profile={boot?.profile}/>
             <p>
               {h.from
                 ? "Listed window: " + h.from + " to " + h.until
