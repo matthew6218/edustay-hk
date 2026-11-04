@@ -58,11 +58,15 @@ export function HomeCard({
   onChange,
   compare,
   onCompare,
+  profileOverride,
+  demoFit = false,
 }: {
   home: Home;
   onChange?: () => void;
   compare?: boolean;
   onCompare?: (id: string) => void;
+  profileOverride?: Profile;
+  demoFit?: boolean;
 }) {
   const { boot, t, notify } = useUI(),
     [saved, setSaved] = useState(!!h.saved);
@@ -118,9 +122,9 @@ export function HomeCard({
             {h.district}
           </span>
           {h.match?.score !== null && h.match?.score !== undefined && (
-            <span className="fit-badge" title={`Based on ${h.match.criteria} of 6 criteria`}>
+            <span className="fit-badge" title={`Based on ${h.match.criteria} of 6 criteria${demoFit?' for Alex’s sample profile':''}`}>
               <Sparkles size={12} />
-              {h.match.score}% fit
+              {h.match.score}% {demoFit?t('demo fit'):t('fit')}
             </span>
           )}
         </div>
@@ -137,7 +141,7 @@ export function HomeCard({
             {h.area} sq ft
           </span>
         </div>
-        <MoveInNote home={h} profile={boot?.profile}/>
+        <MoveInNote home={h} profile={profileOverride||boot?.profile}/>
         {h.sampleSourceName && h.sampleSourceUrl && (
           <p className="sample-source">
             Original listing:{" "}

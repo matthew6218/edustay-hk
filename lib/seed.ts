@@ -1,8 +1,8 @@
 import type {Home,Profile} from './domain.ts';
 import type {AppDatabase,PreparedStatement} from '../db/contracts';
 import {districts,amenities} from './domain.ts';
+import {sampleProfile} from './demo-profile.ts';
 export const DEMO_MODE=true; // This release is an owner-private fictional sandbox, never a live rental service.
-export const sampleProfile:Profile={university:'HKU',study:'Degree',arrival:'2027-08-15',start:'2027-08-15',end:'2027-09-01',months:6,budget:35000,districts:['Kennedy Town','Sai Ying Pun','Hung Hom'],roomType:'Any',occupancy:1,amenities:[],complete:true,step:5};
 const previousDemoProfile:Profile={...sampleProfile,budget:30000,districts:['Kennedy Town','Sai Ying Pun']};
 const previousSampleProfile:Profile={...previousDemoProfile,budget:8000,roomType:'Private room',amenities:['Wi-Fi','Desk','Air conditioning']};
 export const providerNames=['Harbour Nest','Westside Living','Campus Corner','Juniper Homes','Urban Chapter','Little Harbour'];

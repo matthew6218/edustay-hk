@@ -137,6 +137,7 @@ View profile|查看資料|查看资料
 View student profile|查看學生資料|查看学生资料
 View roommate profile|查看室友資料|查看室友资料
 Explore sample homes|探索示例房源|探索示例房源
+demo fit|示例匹配度|示例匹配度
 Sample chat|示例對話|示例对话
 Connections|配對邀請|匹配邀请
 Alias|暱稱|昵称
