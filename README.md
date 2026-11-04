@@ -2,7 +2,7 @@
 
 EduStay HK is a fictional Hong Kong student-housing marketplace demo. The default version runs its student, provider and reviewer workflows entirely in each visitor's browser. No database account, API credentials or upload service is needed.
 
-**Every home, provider, rent, availability, review, profile and enquiry in the seeded data is fictional.** Stock photographs illustrate rooms; they do not depict the fictional properties. The demo is for product walkthroughs and software testing, not for arranging a real tenancy.
+Public sample homes use linked real-market listing snapshots checked on 3 November 2026. Their titles, asking rents, areas and room counts came from those sources; current availability and other terms are unconfirmed. Demo provider accounts, profiles, reviews and enquiries are fictional and do not represent the original listing agents. Stock photographs are illustrative. The demo is for product walkthroughs and software testing, not for arranging a real tenancy.
 
 ## Try the demo
 

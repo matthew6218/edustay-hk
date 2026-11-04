@@ -95,9 +95,9 @@ export async function handle(request:Request,runtime:{db:AppDatabase;bucket?:Ima
   if(url.searchParams.get('tour')==='true')homes=homes.filter(h=>!!h.tour);
   const required=url.searchParams.getAll('amenity');if(required.length)homes=homes.filter(h=>required.every(a=>h.amenities.includes(a)));
   if(url.searchParams.get('saved')==='true'){requireUser('STUDENT');homes=homes.filter(h=>h.saved);}
-  if(url.searchParams.get('discover')==='true'){requireUser('STUDENT');homes=homes.filter(h=>h.match?.eligible&&!['PASS','SAVE'].includes(h.interaction||''));}
+  if(url.searchParams.get('discover')==='true'){requireUser('STUDENT');homes=homes.filter(h=>!['PASS','SAVE'].includes(h.interaction||''));}
   if(url.searchParams.get('eligible')==='true')homes=homes.filter(h=>h.match?.eligible);
-  const sort=url.searchParams.get('sort');homes.sort(sort==='price-asc'?(a,b)=>a.rent-b.rent:sort==='price-desc'?(a,b)=>b.rent-a.rent:sort==='newest'?(a,b)=>b.createdAt.localeCompare(a.createdAt):(a,b)=>(b.match?.score||0)-(a.match?.score||0));
+  const sort=url.searchParams.get('sort');homes.sort(sort==='price-asc'?(a,b)=>a.rent-b.rent:sort==='price-desc'?(a,b)=>b.rent-a.rent:sort==='newest'?(a,b)=>b.createdAt.localeCompare(a.createdAt):(a,b)=>Number(!!b.match?.eligible)-Number(!!a.match?.eligible)||(b.match?.score||0)-(a.match?.score||0));
   const page=Math.max(1,Number(url.searchParams.get('page')||1));return json({homes:homes.slice((page-1)*24,page*24),total:homes.length,page});
  }
  if(path.startsWith('listings/')&&method==='GET'){

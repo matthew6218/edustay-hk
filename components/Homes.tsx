@@ -305,8 +305,8 @@ export function HomePage() {
       <div className="search-wrap container">
         <HeroSearch />
         <p className="search-hint">
-          Exploring for your next semester? All homes shown are fictional sample
-          listings.
+          Exploring for your next semester? Sample homes are public listing
+          snapshots shown with fictional demo providers.
         </p>
       </div>
       <section className="university-strip container">
@@ -665,7 +665,7 @@ export function Catalogue({
       type: "",
       date: "",
       sort: "recommended",
-      eligible: discover,
+      eligible: false,
     }),
     [ready, setReady] = useState(false),
     [selection, setSelection] = useState<string[]>([]),
@@ -731,7 +731,7 @@ export function Catalogue({
           saved
             ? "Your favourites, in one place. A save is never a booking."
             : discover
-              ? "One home at a time. Every fit score has a reason."
+              ? "Swipe through sample homes. Your closest matches appear first."
               : "Thoughtfully laid out, so you can focus on what matters."
         }
       >
@@ -802,7 +802,7 @@ export function Catalogue({
       <div className="results-bar">
         <p>
           <strong>{data?.total ?? "—"}</strong> {saved ? "saved" : "sample"}{" "}
-          homes <span>· Fictional inventory</span>
+          homes <span>· Demo inventory</span>
         </p>
         <select
           aria-label="Sort homes"
@@ -879,6 +879,12 @@ export function Catalogue({
               }
             }}
           >
+            {!homes[0].match?.eligible && (
+              <Notice>
+                This home falls outside your housing preferences. Check the fit
+                reasons before requesting an introduction.
+              </Notice>
+            )}
             <HomeCard home={homes[0]} onChange={refresh} />
             <div className="swipe-actions">
               <Action variant="outline round" run={() => swipe("PASS")}>
@@ -1017,7 +1023,9 @@ export function Detail({ id }: { id: string }) {
       <PageTitle
         eyebrow={h.district}
         title={h.title}
-        description="Real-market reference snapshot · Illustrative stock photography"
+        description={h.sampleSourceUrl
+          ? "Real-market reference snapshot · Illustrative stock photography"
+          : "Fictional demo home · Illustrative stock photography"}
       >
         <Badge kind="green">
           {h.reviewScope || "Information not reviewed"}
@@ -1117,7 +1125,9 @@ export function Detail({ id }: { id: string }) {
                 <dd>
                   {h.depositConfirmed
                     ? money(h.deposit) + " · paid to provider if agreed"
-                    : "Not stated in the public reference snapshot"}
+                    : h.sampleSourceUrl
+                      ? "Not stated in the public reference snapshot"
+                      : "Not specified for this fictional sample"}
                 </dd>
               </div>
               <div>
@@ -1142,7 +1152,9 @@ export function Detail({ id }: { id: string }) {
               {h.confirmedAt
                 ? new Date(h.confirmedAt).toLocaleDateString()
                 : "Not confirmed"}
-              . Confirm current availability on the original listing.
+              . {h.sampleSourceUrl
+                ? "Confirm current availability on the original listing."
+                : "This fictional sample is for the walkthrough only."}
             </p>
             <h3>{t("House rules")}</h3>
             <p>{h.rules}</p>
